@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano de Implantação - Cacau Gestão</title>
+    <style>
+        :root {
+            --cor-primaria: #3b1d11;      /* Tom de chocolate amargo */
+            --cor-secundaria: #c88a35;    /* Caramelo / Dourado */
+            --cor-fundo: #fbf8f5;         /* Creme suave */
+            --cor-card: #ffffff;
+            --cor-texto: #2d2421;
+            --cor-borda: #e8ded4;
+            --cor-sucesso: #27ae60;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto);
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--cor-primaria), #221008);
+            color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1 { font-size: 1.4rem; margin-bottom: 6px; }
+        p.subtitulo { font-size: 0.85rem; opacity: 0.85; margin-bottom: 15px; }
+
+        .barra-progresso-container {
+            background-color: rgba(255, 255, 255, 0.2);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .barra-progresso-preenchimento {
+            background-color: var(--cor-secundaria);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-progresso {
+            font-size: 0.8rem;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .fase {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .fase-cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--cor-borda);
+            padding-bottom: 8px;
+        }
+
+        .fase-titulo {
+            font-size: 1rem;
+            color: var(--cor-primaria);
+            font-weight: 700;
+        }
+
+        .tag-fase {
+            background-color: #f0e6dc;
+            color: var(--cor-primaria);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .lista-tarefas {
+            list-style: none;
+        }
+
+        .item-tarefa {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .item-tarefa:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-tarefa input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--cor-secundaria);
+        }
+
+        .item-tarefa label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .item-tarefa.concluido label {
+            text-decoration: line-through;
+            color: #8c827a;
+        }
+
+        .detalhes-tecnicos {
+            display: block;
+            font-size: 0.75rem;
+            color: #7d6f66;
+            margin-top: 2px;
+        }
+
+        .rodape-botoes {
+            margin-top: 24px;
+            text-align: center;
+        }
+
+        .btn-limpar {
+            background: none;
+            border: 1px solid #d32f2f;
+            color: #d32f2f;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Cacau Gestão - Roteiro de Implantação</h1>
+        <p class="subtitulo">Acompanhamento da construção do ERP no Acode</p>
+        
+        <div class="barra-progresso-container">
+            <div id="progressoPreenchimento" class="barra-progresso-preenchimento"></div>
+        </div>
+        <div id="statusTexto" class="status-progresso">0% Concluído</div>
+    </header>
+
+    <main id="conteudoChecklist">
+
+        <!-- FASE 1 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 1: Ambiente & Estrutura Base</span>
+                <span class="tag-fase">Estrutural</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f1_1" onchange="atualizarProgresso()">
+                    <label for="f1_1">Criar árvore de diretórios no Acode
+                        <span class="detalhes-tecnicos">Pastas: dominio, repositorios, casos-de-uso, apresentacao e estilos.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f1_2" onchange="atualizarProgresso()">
+                    <label for="f1_2">Configurar indice.html e variaveis.css
+                        <span class="detalhes-tecnicos">Definir paleta de cores, tipografia e tags semânticas para as abas.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f1_3" onchange="atualizarProgresso()">
+                    <label for="f1_3">Configurar o ponto de entrada (principal.js)
+                        <span class="detalhes-tecnicos">Garantir suporte a módulos ES6 nativos (&lt;script type="module"&gt;).</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 2 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 2: Camada de Domínio (Entidades)</span>
+                <span class="tag-fase">Regras de Negócio</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f2_1" onchange="atualizarProgresso()">
+                    <label for="f2_1">Criar LoteCompra.js e Produto.js
+                        <span class="detalhes-tecnicos">Modelar preço de compra variável, preço de venda fixo e data de validade.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f2_2" onchange="atualizarProgresso()">
+                    <label for="f2_2">Criar Cliente.js e Pagamento.js
+                        <span class="detalhes-tecnicos">Dados cadastrais, canais (Teams/WhatsApp) e saldo devedor com amortização parcial.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f2_3" onchange="atualizarProgresso()">
+                    <label for="f2_3">Criar Venda.js e Perda.js
+                        <span class="detalhes-tecnicos">Registro de saídas regulares (Pix/Fiado) e perdas (avaria, validade, desvio).</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 3 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 3: Repositórios & Armazenamento</span>
+                <span class="tag-fase">Persistência</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f3_1" onchange="atualizarProgresso()">
+                    <label for="f3_1">Criar RepositorioBase.js
+                        <span class="detalhes-tecnicos">Abstração do LocalStorage para operações de leitura, gravação e deleção.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f3_2" onchange="atualizarProgresso()">
+                    <label for="f3_2">Implementar repositórios específicos
+                        <span class="detalhes-tecnicos">Repositorios: Produtos, Clientes, Vendas e Perdas.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f3_3" onchange="atualizarProgresso()">
+                    <label for="f3_3">Mecanismo de Exportação/Importação (Backup)
+                        <span class="detalhes-tecnicos">Permitir baixar e restaurar todos os dados em arquivo JSON.</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 4 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 4: Casos de Uso Críticos</span>
+                <span class="tag-fase">Operações</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f4_1" onchange="atualizarProgresso()">
+                    <label for="f4_1">ComprarEstoque.js (Entrada de Lotes)
+                        <span class="detalhes-tecnicos">Adicionar novo lote com preço de compra e data de validade.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f4_2" onchange="atualizarProgresso()">
+                    <label for="f4_2">RegistrarVenda.js com baixa por lote (PEPS)
+                        <span class="detalhes-tecnicos">Consumir unidades do lote mais antigo e calcular o custo real da venda.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f4_3" onchange="atualizarProgresso()">
+                    <label for="f4_3">RegistrarPagamento.js
+                        <span class="detalhes-tecnicos">Liquidar saldo ou abater pagamento parcial com registro do histórico.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f4_4" onchange="atualizarProgresso()">
+                    <label for="f4_4">RegistrarPerda.js
+                        <span class="detalhes-tecnicos">Dar baixa no estoque sem gerar receita, alocando no centro de perdas.</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 5 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 5: Interface do Usuário (Telas)</span>
+                <span class="tag-fase">Visual</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f5_1" onchange="atualizarProgresso()">
+                    <label for="f5_1">Navegação entre Abas
+                        <span class="detalhes-tecnicos">Abas: Vendas Rápidas, Estoque/Compras, Clientes, Cobrança e Relatórios.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f5_2" onchange="atualizarProgresso()">
+                    <label for="f5_2">Tela e Controlador de Estoque
+                        <span class="detalhes-tecnicos">Listar estoque atual, alertas de validade e botão de entrada de lote.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f5_3" onchange="atualizarProgresso()">
+                    <label for="f5_3">Tela e Controlador de Venda Manual
+                        <span class="detalhes-tecnicos">Formulário rápido para lançar vendas manuais (Pix ou Fiado).</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 6 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 6: Módulo de Cobrança (Teams/Whats)</span>
+                <span class="tag-fase">Fechamento</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f6_1" onchange="atualizarProgresso()">
+                    <label for="f6_1">GerarCobrancaMensal.js
+                        <span class="detalhes-tecnicos">Formatador do texto com extrato dos chocolates consumidos e chave Pix.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f6_2" onchange="atualizarProgresso()">
+                    <label for="f6_2">Disparo para o Microsoft Teams
+                        <span class="detalhes-tecnicos">Botão para copiar mensagem pré-formatada para a área de transferência.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f6_3" onchange="atualizarProgresso()">
+                    <label for="f6_3">Disparo para o WhatsApp
+                        <span class="detalhes-tecnicos">Link wa.me gerado automaticamente para abrir a conversa com texto preenchido.</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 7 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 7: DRE & Indicadores Reais</span>
+                <span class="tag-fase">Gestão</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f7_1" onchange="atualizarProgresso()">
+                    <label for="f7_1">Painel de Lucro Líquido
+                        <span class="detalhes-tecnicos">Receita Total - Custos de Compra dos Lotes - Perdas Registradas.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f7_2" onchange="atualizarProgresso()">
+                    <label for="f7_2">Alerta de Compras e Validade
+                        <span class="detalhes-tecnicos">Identificar produtos abaixo do estoque mínimo e lotes prestes a vencer.</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <!-- FASE 8 -->
+        <section class="fase">
+            <div class="fase-cabecalho">
+                <span class="fase-titulo">Fase 8: Módulo de IA & Foto da Folha</span>
+                <span class="tag-fase">Automação Futura</span>
+            </div>
+            <ul class="lista-tarefas">
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f8_1" onchange="atualizarProgresso()">
+                    <label for="f8_1">ModalRevisao.js (Revisão Humana)
+                        <span class="detalhes-tecnicos">Interface intermediária para confirmar lançamentos em lote antes de gravar.</span>
+                    </label>
+                </li>
+                <li class="item-tarefa">
+                    <input type="checkbox" id="f8_2" onchange="atualizarProgresso()">
+                    <label for="f8_2">Conector com IA (Leitura de Imagem)
+                        <span class="detalhes-tecnicos">Envio da imagem para processamento e mapeamento para o Modal de Revisão.</span>
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+    </main>
+
+    <div class="rodape-botoes">
+        <button class="btn-limpar" onclick="limparProgresso()">Reiniciar Checklist</button>
+    </div>
+
+    <script>
+        const CHAVE_STORAGE = 'cacau_gestao_checklist_progresso';
+
+        function carregarProgresso() {
+            const estadoSalvo = JSON.parse(localStorage.getItem(CHAVE_STORAGE)) || {};
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            
+            checkboxes.forEach(cb => {
+                if (estadoSalvo[cb.id]) {
+                    cb.checked = true;
+                    cb.closest('.item-tarefa').classList.add('concluido');
+                }
+            });
+            calcularEstatisticas();
+        }
+
+        function atualizarProgresso() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const estado = {};
+
+            checkboxes.forEach(cb => {
+                estado[cb.id] = cb.checked;
+                const container = cb.closest('.item-tarefa');
+                if (cb.checked) {
+                    container.classList.add('concluido');
+                } else {
+                    container.classList.remove('concluido');
+                }
+            });
+
+            localStorage.setItem(CHAVE_STORAGE, JSON.stringify(estado));
+            calcularEstatisticas();
+        }
+
+        function calcularEstatisticas() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const total = checkboxes.length;
+            const marcados = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            
+            const porcentagem = Math.round((marcados / total) * 100);
+
+            document.getElementById('progressoPreenchimento').style.width = porcentagem + '%';
+            document.getElementById('statusTexto').innerText = `${porcentagem}% Concluído (${marcados}/${total})`;
+        }
+
+        function limparProgresso() {
+            if (confirm("Tem certeza que deseja desmarcar todas as etapas do checklist?")) {
+                localStorage.removeItem(CHAVE_STORAGE);
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                    cb.closest('.item-tarefa').classList.remove('concluido');
+                });
+                calcularEstatisticas();
+            }
+        }
+
+        window.onload = carregarProgresso;
+    </script>
+</body>
+</html>
