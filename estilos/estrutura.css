@@ -1,0 +1,105 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--fonte-padrao);
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Cabeçalho Fixo */
+.cabecalho-principal {
+    background-color: var(--cor-primaria);
+    color: #FFFFFF;
+    padding: var(--espacamento-medio);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--sombra-card);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cabecalho-titulo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.cabecalho-subtitulo {
+    font-size: 0.75rem;
+    color: var(--cor-secundaria);
+}
+
+/* Área de Conteúdo das Telas */
+.conteudo-aplicacao {
+    flex: 1;
+    padding: var(--espacamento-medio);
+    padding-bottom: 80px; /* Evita que a barra inferior cubra o conteúdo */
+    max-width: 600px;     /* Mantém largura confortável mesmo em tablets */
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Controle de exibição das Abas */
+.secao-aba {
+    display: none;
+}
+
+.secao-aba.ativa {
+    display: block;
+    animation: surgirSuave 0.2s ease-in-out;
+}
+
+@keyframes surgirSuave {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Barra de Navegação Inferior (Estilo App Mobile) */
+.barra-navegacao {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background-color: var(--cor-superficie);
+    border-top: 1px solid var(--cor-borda);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 100;
+}
+
+.botao-aba {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-texto-suave);
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.botao-aba .icone-aba {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
+.botao-aba.ativa {
+    color: var(--cor-secundaria);
+}

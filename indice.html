@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cacau Gestão</title>
+    
+    <!-- Folhas de Estilo -->
+    <link rel="stylesheet" href="estilos/variaveis.css">
+    <link rel="stylesheet" href="estilos/estrutura.css">
+    <link rel="stylesheet" href="estilos/componentes.css">
+</head>
+<body>
+
+    <!-- Topo da Aplicação -->
+    <header class="cabecalho-principal">
+        <div>
+            <h1 class="cabecalho-titulo">Cacau Gestão</h1>
+            <span class="cabecalho-subtitulo">Controle de Vendas & Estoque</span>
+        </div>
+        <div id="indicador-conexao" style="font-size: 0.8rem; color: var(--cor-secundaria);">● Local</div>
+    </header>
+
+    <!-- Conteúdo Dinâmico por Aba -->
+    <main class="conteudo-aplicacao">
+        
+        <!-- Aba 1: Vendas Rápidas -->
+        <section id="aba-vendas" class="secao-aba ativa">
+            <h2>Registrar Vendas</h2>
+            <div id="conteudo-vendas">Carregando painel de vendas...</div>
+        </section>
+
+        <!-- Aba 2: Estoque e Lotes -->
+        <section id="aba-estoque" class="secao-aba">
+            <h2>Estoque e Compras</h2>
+            <div id="conteudo-estoque">Carregando controle de estoque...</div>
+        </section>
+
+        <!-- Aba 3: Clientes & Fiado -->
+        <section id="aba-clientes" class="secao-aba">
+            <h2>Clientes e Débitos</h2>
+            <div id="conteudo-clientes">Carregando carteira de clientes...</div>
+        </section>
+
+        <!-- Aba 4: Cobrança Teams/Whats -->
+        <section id="aba-cobranca" class="secao-aba">
+            <h2>Cobrança do Mês</h2>
+            <div id="conteudo-cobranca">Carregando mensagens de cobrança...</div>
+        </section>
+
+        <!-- Aba 5: Relatórios & Perdas -->
+        <section id="aba-relatorios" class="secao-aba">
+            <h2>Balanço e Perdas</h2>
+            <div id="conteudo-relatorios">Carregando balanço financeiro...</div>
+        </section>
+
+    </main>
+
+    <!-- Barra Inferior de Navegação -->
+    <nav class="barra-navegacao">
+        <button class="botao-aba ativa" data-aba="aba-vendas">
+            <span class="icone-aba">🛒</span>
+            <span>Vendas</span>
+        </button>
+        <button class="botao-aba" data-aba="aba-estoque">
+            <span class="icone-aba">📦</span>
+            <span>Estoque</span>
+        </button>
+        <button class="botao-aba" data-aba="aba-clientes">
+            <span class="icone-aba">👥</span>
+            <span>Clientes</span>
+        </button>
+        <button class="botao-aba" data-aba="aba-cobranca">
+            <span class="icone-aba">💬</span>
+            <span>Cobrança</span>
+        </button>
+        <button class="botao-aba" data-aba="aba-relatorios">
+            <span class="icone-aba">📊</span>
+            <span>Balanço</span>
+        </button>
+    </nav>
+
+    <!-- Módulo Principal da Aplicação -->
+    <script type="module" src="codigo/principal.js"></script>
+</body>
+</html>
