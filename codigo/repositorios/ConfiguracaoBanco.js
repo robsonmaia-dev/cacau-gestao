@@ -4,8 +4,8 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// Cole aqui os dados do seu painel Supabase:
-export const URL_SUPABASE = 'https://bvqyiccynvgndugxayzh.supabase.co/rest/v1/';
+// URL raiz limpa (sem /rest/v1/):
+export const URL_SUPABASE = 'https://bvqyiccynvgndugxayzh.supabase.co';
 export const CHAVE_ANON_SUPABASE = 'sb_publishable_31sF_uP_iTuYo3XRHnfqEA_bFQrg3XB';
 
 // Instância única do cliente Supabase para toda a aplicação

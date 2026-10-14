@@ -11,33 +11,51 @@ export class RepositorioClientes extends RepositorioBase {
      * Busca todos os clientes com o histórico completo de pagamentos
      */
     async obterTodosComHistorico() {
-        const { data, error } = await this.cliente
+        // 1. Busca os clientes
+        const { data: clientesData, error: erroClientes } = await this.cliente
             .from('clientes')
-            .select(`
-                *,
-                pagamentos(*)
-            `)
+            .select('*')
             .order('nome', { ascending: true });
 
-        if (error) {
-            console.error("Erro ao buscar clientes:", error);
-            throw new Error("Falha ao carregar carteira de clientes.");
+        if (erroClientes) {
+            console.error("Erro ao buscar clientes:", erroClientes);
+            throw new Error(`Falha nos clientes: ${erroClientes.message}`);
         }
 
-        return (data || []).map(item => new Cliente({
-            id: item.id,
-            nome: item.nome,
-            canalPreferencial: item.canal_preferencial,
-            contato: item.contato,
-            saldoDevedor: item.saldo_devedor,
-            historicoPagamentos: (item.pagamentos || []).map(pag => new Pagamento({
+        // 2. Busca os pagamentos
+        const { data: pagamentosData, error: erroPagamentos } = await this.cliente
+            .from('pagamentos')
+            .select('*');
+
+        if (erroPagamentos) {
+            console.error("Erro ao buscar pagamentos:", erroPagamentos);
+            throw new Error(`Falha nos pagamentos: ${erroPagamentos.message}`);
+        }
+
+        // 3. Agrupa os pagamentos por clienteId
+        const mapaPagamentos = new Map();
+        (pagamentosData || []).forEach(pag => {
+            if (!mapaPagamentos.has(pag.cliente_id)) {
+                mapaPagamentos.set(pag.cliente_id, []);
+            }
+            mapaPagamentos.get(pag.cliente_id).push(new Pagamento({
                 id: pag.id,
                 clienteId: pag.cliente_id,
                 valor: pag.valor,
                 metodo: pag.metodo,
                 observacao: pag.observacao,
                 dataHora: pag.data_hora
-            }))
+            }));
+        });
+
+        // 4. Monta as instâncias de Cliente
+        return (clientesData || []).map(item => new Cliente({
+            id: item.id,
+            nome: item.nome,
+            canalPreferencial: item.canal_preferencial,
+            contato: item.contato,
+            saldoDevedor: item.saldo_devedor,
+            historicoPagamentos: mapaPagamentos.get(item.id) || []
         }));
     }
 

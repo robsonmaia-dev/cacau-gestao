@@ -11,26 +11,34 @@ export class RepositorioProdutos extends RepositorioBase {
      * Busca todos os produtos trazendo seus respectivos lotes de compra
      */
     async obterTodosComLotes() {
-        const { data, error } = await this.cliente
+        // 1. Busca todos os produtos
+        const { data: produtosData, error: erroProdutos } = await this.cliente
             .from('produtos')
-            .select(`
-                *,
-                lotes:lotes_compra(*)
-            `)
+            .select('*')
             .order('nome', { ascending: true });
 
-        if (error) {
-            console.error("Erro ao buscar produtos com lotes:", error);
-            throw new Error("Falha ao carregar catálogo de produtos.");
+        if (erroProdutos) {
+            console.error("Erro ao buscar produtos:", erroProdutos);
+            throw new Error(`Falha nos produtos: ${erroProdutos.message}`);
         }
 
-        return (data || []).map(item => new Produto({
-            id: item.id,
-            nome: item.nome,
-            categoria: item.categoria,
-            precoVenda: item.preco_venda,
-            estoqueMinimo: item.estoque_minimo,
-            lotes: (item.lotes || []).map(lote => new LoteCompra({
+        // 2. Busca todos os lotes de compra
+        const { data: lotesData, error: erroLotes } = await this.cliente
+            .from('lotes_compra')
+            .select('*');
+
+        if (erroLotes) {
+            console.error("Erro ao buscar lotes:", erroLotes);
+            throw new Error(`Falha nos lotes: ${erroLotes.message}`);
+        }
+
+        // 3. Agrupa os lotes por produtoId
+        const mapaLotes = new Map();
+        (lotesData || []).forEach(lote => {
+            if (!mapaLotes.has(lote.produto_id)) {
+                mapaLotes.set(lote.produto_id, []);
+            }
+            mapaLotes.get(lote.produto_id).push(new LoteCompra({
                 id: lote.id,
                 produtoId: lote.produto_id,
                 precoCustoUnitario: lote.preco_custo_unitario,
@@ -38,7 +46,17 @@ export class RepositorioProdutos extends RepositorioBase {
                 quantidadeAtual: lote.quantidade_atual,
                 dataCompra: lote.data_compra,
                 dataValidade: lote.data_validade
-            }))
+            }));
+        });
+
+        // 4. Monta as instâncias de Produto
+        return (produtosData || []).map(item => new Produto({
+            id: item.id,
+            nome: item.nome,
+            categoria: item.categoria,
+            precoVenda: item.preco_venda,
+            estoqueMinimo: item.estoque_minimo,
+            lotes: mapaLotes.get(item.id) || []
         }));
     }
 

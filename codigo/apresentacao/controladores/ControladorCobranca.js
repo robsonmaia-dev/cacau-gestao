@@ -1,0 +1,130 @@
+import { TelaCobranca } from '../telas/TelaCobranca.js';
+
+export class ControladorCobranca {
+    /**
+     * @param {import('../../repositorios/RepositorioClientes.js').RepositorioClientes} repositorioClientes
+     * @param {import('../../casos-de-uso/GerarCobrancaMensal.js').GerarCobrancaMensal} casoDeUsoGerarCobranca
+     * @param {import('../../casos-de-uso/RegistrarPagamento.js').RegistrarPagamento} casoDeUsoRegistrarPagamento
+     * @param {Function} aoAtualizarDados - Callback para atualizar outras telas
+     */
+    constructor(repositorioClientes, casoDeUsoGerarCobranca, casoDeUsoRegistrarPagamento, aoAtualizarDados) {
+        this.repositorioClientes = repositorioClientes;
+        this.casoDeUsoGerarCobranca = casoDeUsoGerarCobranca;
+        this.casoDeUsoRegistrarPagamento = casoDeUsoRegistrarPagamento;
+        this.aoAtualizarDados = aoAtualizarDados;
+        this.container = document.getElementById('conteudo-cobranca');
+
+        // Carrega configurações salvas localmente
+        this.chavePix = localStorage.getItem('cacau_chave_pix') || '';
+        this.linkCatalogo = localStorage.getItem('cacau_link_catalogo') || '';
+    }
+
+    async inicializar() {
+        await this.atualizarTela();
+    }
+
+    async atualizarTela() {
+        try {
+            const clientes = await this.repositorioClientes.obterTodosComHistorico();
+            const devedores = clientes.filter(c => c.possuiDebito());
+
+            TelaCobranca.renderizar(this.container, devedores, this.chavePix, this.linkCatalogo);
+            this.vincularEventos(devedores);
+        } catch (erro) {
+            this.container.innerHTML = `<p style="color: var(--cor-perigo); text-align: center;">Erro: ${erro.message}</p>`;
+        }
+    }
+
+    vincularEventos(devedores) {
+        // Salva Chave Pix e Catálogo automaticamente ao digitar
+        const inputPix = document.getElementById('campo-chave-pix');
+        const inputCatalogo = document.getElementById('campo-link-catalogo');
+
+        inputPix?.addEventListener('change', () => {
+            this.chavePix = inputPix.value.trim();
+            localStorage.setItem('cacau_chave_pix', this.chavePix);
+        });
+
+        inputCatalogo?.addEventListener('change', () => {
+            this.linkCatalogo = inputCatalogo.value.trim();
+            localStorage.setItem('cacau_link_catalogo', this.linkCatalogo);
+        });
+
+        // Botões de Gerar Cobrança (Teams / WhatsApp)
+        document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!this.chavePix) {
+                    return alert("Por favor, preencha sua Chave Pix no topo da página antes de cobrar!");
+                }
+
+                const clienteId = btn.getAttribute('data-cliente-id');
+                const cliente = devedores.find(c => c.id === clienteId);
+                if (!cliente) return;
+
+                const resultado = await this.casoDeUsoGerarCobranca.executar({
+                    cliente: cliente,
+                    chavePix: this.chavePix,
+                    linkCatalogo: this.linkCatalogo
+                });
+
+                if (resultado.canal === 'WHATSAPP') {
+                    // Abre diretamente o WhatsApp com o texto preenchido
+                    window.open(resultado.linkWhatsApp, '_blank');
+                } else {
+                    // Copia o texto para a área de transferência para colar no Teams
+                    navigator.clipboard.writeText(resultado.mensagemTexto).then(() => {
+                        alert(`📋 Mensagem copiada com sucesso!\n\nAgora basta abrir o Teams no chat de "${cliente.nome}" e colar (Ctrl+V).`);
+                    }).catch(() => {
+                        prompt("Copie a mensagem abaixo para enviar no Teams:", resultado.mensagemTexto);
+                    });
+                }
+            });
+        });
+
+        // Botão para Abrir Modal de Pagamento
+        document.querySelectorAll('.btn-quitar-debito').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const clienteId = btn.getAttribute('data-cliente-id');
+                const clienteNome = btn.getAttribute('data-cliente-nome');
+                const saldo = btn.getAttribute('data-saldo');
+
+                document.getElementById('pagamento-cliente-id').value = clienteId;
+                document.getElementById('titulo-modal-pagamento').innerText = `Baixar Pagamento: ${clienteNome}`;
+                document.getElementById('pagamento-valor').value = Number(saldo).toFixed(2);
+                document.getElementById('modal-pagamento-cobranca').classList.add('aberto');
+            });
+        });
+
+        // Fechar Modal
+        document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('modal-pagamento-cobranca').classList.remove('aberto');
+            });
+        });
+
+        // Confirmar Pagamento no Modal
+        const formPagamento = document.getElementById('form-pagamento-cobranca');
+        formPagamento?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('pagamento-cliente-id').value;
+            const valor = document.getElementById('pagamento-valor').value;
+            const metodo = document.getElementById('pagamento-metodo').value;
+
+            try {
+                const res = await this.casoDeUsoRegistrarPagamento.executar({
+                    clienteId: clienteId,
+                    valor: valor,
+                    metodo: metodo,
+                    observacao: "Acerto pelo painel de cobrança"
+                });
+
+                document.getElementById('modal-pagamento-cobranca').classList.remove('aberto');
+                alert(res.mensagem);
+                await this.atualizarTela();
+                if (this.aoAtualizarDados) await this.aoAtualizarDados();
+            } catch (erro) {
+                alert(`Erro: ${erro.message}`);
+            }
+        });
+    }
+}

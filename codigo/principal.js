@@ -1,57 +1,82 @@
-/**
- * PONTO DE ENTRADA PRINCIPAL DA APLICAÇÃO (BOOTSTRAP)
- * Responsável por inicializar eventos globais, navegação e injeção de dependências.
- */
+import { RepositorioProdutos } from './repositorios/RepositorioProdutos.js';
+import { RepositorioClientes } from './repositorios/RepositorioClientes.js';
+import { RepositorioVendas } from './repositorios/RepositorioVendas.js';
 
-// Função que gerencia a troca de abas da interface
-function configurarNavegacaoAbas() {
+import { ComprarEstoque } from './casos-de-uso/ComprarEstoque.js';
+import { RegistrarVenda } from './casos-de-uso/RegistrarVenda.js';
+import { GerarCobrancaMensal } from './casos-de-uso/GerarCobrancaMensal.js';
+import { RegistrarPagamento } from './casos-de-uso/RegistrarPagamento.js';
+
+import { ControladorEstoque } from './apresentacao/controladores/ControladorEstoque.js';
+import { ControladorVendas } from './apresentacao/controladores/ControladorVendas.js';
+import { ControladorCobranca } from './apresentacao/controladores/ControladorCobranca.js';
+
+function configurarNavegacaoAbas(aoMudarAba) {
     const botoesNavegacao = document.querySelectorAll('.botao-aba');
     const secoesAba = document.querySelectorAll('.secao-aba');
 
     botoesNavegacao.forEach(botao => {
-        botao.addEventListener('click', () => {
+        botao.addEventListener('click', async () => {
             const idAbaAlvo = botao.getAttribute('data-aba');
-
-            // 1. Remove o estado ativo de todos os botões e seções
             botoesNavegacao.forEach(b => b.classList.remove('ativa'));
             secoesAba.forEach(s => s.classList.remove('ativa'));
 
-            // 2. Ativa o botão clicado
             botao.classList.add('ativa');
-
-            // 3. Exibe a seção correspondente
             const secaoAlvo = document.getElementById(idAbaAlvo);
-            if (secaoAlvo) {
-                secaoAlvo.classList.add('ativa');
-            }
+            if (secaoAlvo) secaoAlvo.classList.add('ativa');
+
+            if (aoMudarAba) await aoMudarAba(idAbaAlvo);
         });
     });
 }
 
-// Inicializador dos futuros controladores (será preenchido nas próximas fases)
-function inicializarControladores() {
-    console.log("Controladores prontos para inicialização.");
-}
-
-// Inicialização Geral da Aplicação
-function iniciarAplicacao() {
+async function iniciarAplicacao() {
     console.log("🍫 Inicializando Cacau Gestão...");
 
-    // Ativa os cliques da barra de navegação inferior
-    configurarNavegacaoAbas();
+    try {
+        // Repositórios
+        const repoProdutos = new RepositorioProdutos();
+        const repoClientes = new RepositorioClientes();
+        const repoVendas = new RepositorioVendas();
 
-    // Inicializa a camada de apresentação
-    inicializarControladores();
+        // Casos de Uso
+        const ucComprarEstoque = new ComprarEstoque(repoProdutos);
+        const ucRegistrarVenda = new RegistrarVenda(repoProdutos, repoClientes, repoVendas);
+        const ucGerarCobranca = new GerarCobrancaMensal(repoVendas);
+        const ucRegistrarPagamento = new RegistrarPagamento(repoClientes);
 
-    // Atualiza o indicador visual de status no cabeçalho
-    const indicador = document.getElementById('indicador-conexao');
-    if (indicador) {
-        indicador.innerText = '● Pronto';
-        indicador.style.color = 'var(--cor-sucesso)';
+        // Controladores
+        const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque);
+        
+        let ctrlCobranca = null;
+        const atualizarTudo = async () => {
+            await ctrlEstoque.atualizarTela();
+            if (ctrlCobranca) await ctrlCobranca.atualizarTela();
+        };
+
+        const ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
+        ctrlCobranca = new ControladorCobranca(repoClientes, ucGerarCobranca, ucRegistrarPagamento, atualizarTudo);
+
+        // Inicializa telas
+        await ctrlEstoque.inicializar();
+        await ctrlVendas.inicializar();
+        await ctrlCobranca.inicializar();
+
+        // Recarrega dados ao alternar de aba
+        configurarNavegacaoAbas(async (idAba) => {
+            if (idAba === 'aba-vendas') await ctrlVendas.atualizarTela();
+            if (idAba === 'aba-estoque') await ctrlEstoque.atualizarTela();
+            if (idAba === 'aba-cobranca') await ctrlCobranca.atualizarTela();
+        });
+
+        const indicador = document.getElementById('indicador-conexao');
+        if (indicador) {
+            indicador.innerText = '● Nuvem Conectada';
+            indicador.style.color = 'var(--cor-sucesso)';
+        }
+    } catch (erro) {
+        console.error("Erro na inicialização:", erro);
     }
-
-    console.log(" Cacau Gestão carregado com sucesso!");
 }
 
-// Aguarda o carregamento completo do DOM antes de iniciar
 document.addEventListener('DOMContentLoaded', iniciarAplicacao);
