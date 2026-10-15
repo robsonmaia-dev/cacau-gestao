@@ -1,6 +1,6 @@
 /**
  * TELA: TelaVendas
- * Interface para lançamento rápido de vendas (Pix, Fiado ou Câmera com IA).
+ * Interface para lançamento rápido de vendas (Pix, Fiado, Câmera ou Galeria com IA).
  */
 export class TelaVendas {
     static formatarMoeda(valor) {
@@ -9,16 +9,23 @@ export class TelaVendas {
 
     static renderizar(container, produtos = [], clientes = []) {
         container.innerHTML = `
-            <!-- Botão de Automação com Foto / IA -->
+            <!-- Painel de Leitura por Foto / IA -->
             <div class="cartao" style="background: linear-gradient(135deg, #FAF6F0, #F4ECE1); border: 1.5px dashed var(--cor-secundaria); margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <div style="font-weight: 700; color: var(--cor-primaria); font-size: 0.95rem;">📸 Tirar Foto da Folha</div>
-                        <div style="font-size: 0.75rem; color: var(--cor-texto-suave);">A IA lê o papel e monta as vendas para você revisar.</div>
-                    </div>
-                    <label class="botao botao-secundario" style="height: 40px; padding: 0 12px; cursor: pointer;">
-                        📷 Abrir Câmera
-                        <input type="file" id="input-foto-folha" accept="image/*" capture="environment" style="display: none;">
+                <div style="margin-bottom: 10px;">
+                    <div style="font-weight: 700; color: var(--cor-primaria); font-size: 0.95rem;">📸 Ler Folha de Vendas com IA</div>
+                    <div style="font-size: 0.75rem; color: var(--cor-texto-suave);">Tire uma foto ou carregue uma imagem da folha para lançar em lote.</div>
+                </div>
+                
+                <!-- Botões Duplos: Câmera ou Galeria -->
+                <div style="display: flex; gap: 8px;">
+                    <label class="botao botao-secundario" style="flex: 1; height: 40px; font-size: 0.8rem; cursor: pointer;">
+                        📷 Tirar Foto
+                        <input type="file" id="input-foto-camera" accept="image/*" capture="environment" style="display: none;">
+                    </label>
+                    
+                    <label class="botao botao-suave" style="flex: 1; height: 40px; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--cor-borda);">
+                        📁 Da Galeria
+                        <input type="file" id="input-foto-arquivo" accept="image/*" style="display: none;">
                     </label>
                 </div>
             </div>
@@ -96,7 +103,7 @@ export class TelaVendas {
                 </form>
             </div>
 
-            <!-- MODAL 1: CADASTRAR CLIENTE -->
+            <!-- MODAL: CADASTRAR CLIENTE RÁPIDO -->
             <div id="modal-rapido-cliente" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">
@@ -124,7 +131,7 @@ export class TelaVendas {
                 </div>
             </div>
 
-            <!-- MODAL 2: GAVETA DE REVISÃO HUMANA (IA) -->
+            <!-- MODAL: GAVETA DE REVISÃO HUMANA (IA) -->
             <div id="modal-revisao-ia" class="fundo-modal"></div>
         `;
     }

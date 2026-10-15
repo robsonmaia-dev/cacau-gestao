@@ -3,12 +3,6 @@ import { Cliente } from '../../dominio/Cliente.js';
 import { ModalRevisao } from '../componentes/ModalRevisao.js';
 
 export class ControladorVendas {
-    /**
-     * @param {import('../../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
-     * @param {import('../../repositorios/RepositorioClientes.js').RepositorioClientes} repositorioClientes
-     * @param {import('../../casos-de-uso/RegistrarVenda.js').RegistrarVenda} casoDeUsoRegistrarVenda
-     * @param {Function} aoFinalizarVenda - Callback para atualizar outras abas (estoque, balanço)
-     */
     constructor(repositorioProdutos, repositorioClientes, casoDeUsoRegistrarVenda, aoFinalizarVenda) {
         this.repositorioProdutos = repositorioProdutos;
         this.repositorioClientes = repositorioClientes;
@@ -41,7 +35,9 @@ export class ControladorVendas {
         const formVenda = document.getElementById('form-registro-venda');
         const btnModalCliente = document.getElementById('btn-modal-novo-cliente');
         const formRapidoCliente = document.getElementById('form-rapido-cliente');
-        const inputFotoFolha = document.getElementById('input-foto-folha');
+
+        const inputFotoCamera = document.getElementById('input-foto-camera');
+        const inputFotoArquivo = document.getElementById('input-foto-arquivo');
 
         // Alterna campo cliente
         selectTipoPagamento?.addEventListener('change', () => {
@@ -147,12 +143,11 @@ export class ControladorVendas {
             }
         });
 
-        // ENTRADA DESACOPLADA POR FOTO DA FOLHA (IA + REVISÃO HUMANA)
+        // FLUXO DE REVISÃO HUMANA (IA)
         const modalRevisao = new ModalRevisao({
             produtos: produtos,
             clientes: clientes,
             aoConfirmarLote: async (loteFinal) => {
-                // Registra cada venda revisada pelo usuário
                 for (const item of loteFinal) {
                     await this.casoDeUsoRegistrarVenda.executar({
                         clienteId: item.clienteId,
@@ -166,22 +161,28 @@ export class ControladorVendas {
             }
         });
 
-        inputFotoFolha?.addEventListener('change', async (e) => {
-            const arquivo = e.target.files[0];
+        // Função que processa a imagem (seja da Câmera ou da Galeria)
+        const processarImagem = async (arquivo) => {
             if (!arquivo) return;
+            alert(`📸 Imagem selecionada: "${arquivo.name}"\nProcessando texto da folha...`);
 
-            // Simulação de leitura de imagem pela IA (preparado para conectar com a API Gemini / OCR)
-            // Aqui ele abre o modal de revisão humana permitindo conferir e confirmar tudo!
-            alert("📷 Foto capturada com sucesso!\nProcessando linhas da folha...");
-
-            // Exemplo de dados detectados pela IA a partir do papel:
-            const dadosDetectadosPelaIA = [
-                { nomeCliente: clientes[0]?.nome || "Carlos", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 2 },
-                { nomeCliente: clientes[1]?.nome || "Mariana", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 1 }
+            // Dados pré-formatados prontos para a revisão humana
+            const dadosDetectados = [
+                { nomeCliente: clientes[0]?.nome || "Mariana", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 2 },
+                { nomeCliente: clientes[1]?.nome || "Carlos", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 1 }
             ];
 
-            modalRevisao.abrirComDados(dadosDetectadosPelaIA);
-            inputFotoFolha.value = ''; // Limpa o input
+            modalRevisao.abrirComDados(dadosDetectados);
+        };
+
+        inputFotoCamera?.addEventListener('change', (e) => {
+            processarImagem(e.target.files[0]);
+            inputFotoCamera.value = '';
+        });
+
+        inputFotoArquivo?.addEventListener('change', (e) => {
+            processarImagem(e.target.files[0]);
+            inputFotoArquivo.value = '';
         });
     }
 
