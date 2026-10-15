@@ -1,6 +1,6 @@
 /**
  * CASO DE USO: LerFolhaComIA
- * Converte a foto da folha em base64 e envia para o Google Gemini Vision extrair as vendas.
+ * Converte a foto da folha em base64 e envia para o Google Gemini Flash (3.8) extrair as vendas.
  */
 export class LerFolhaComIA {
     /**
@@ -8,10 +8,16 @@ export class LerFolhaComIA {
      */
     constructor(chaveApiGemini) {
         this.chaveApi = chaveApiGemini;
+        // Modelos em ordem de prioridade (Gemini 3.8 Flash como principal)
+        this.modelosDisponiveis = [
+            'gemini-3.8-flash',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash'
+        ];
     }
 
     /**
-     * Converte um arquivo File/Blob em Base64
+     * Converte o arquivo de imagem em Base64
      */
     async arquivoParaBase64(arquivo) {
         return new Promise((resolve, reject) => {
@@ -26,7 +32,20 @@ export class LerFolhaComIA {
     }
 
     /**
-     * Processa a imagem da folha e retorna a lista de vendas estruturada
+     * Limpa eventuais marcações de markdown (```json ... ```) devolvidas pelo modelo
+     */
+    limparJsonResposta(texto) {
+        let limpo = texto.trim();
+        if (limpo.startsWith('```json')) {
+            limpo = limpo.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+        } else if (limpo.startsWith('```')) {
+            limpo = limpo.replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+        }
+        return limpo.trim();
+    }
+
+    /**
+     * Processa a imagem da folha com tentativa sequencial dos modelos
      * @param {File} arquivoImagem
      */
     async processarImagemFolha(arquivoImagem) {
@@ -36,76 +55,86 @@ export class LerFolhaComIA {
 
         const imagemBase64 = await this.arquivoParaBase64(arquivoImagem);
 
-        const prompt = `
-Você é um especialista em ler folhas manuscritas de controle de consumo de chocolates.
-Analise a imagem da tabela anexa.
+        const promptInstrucoes = `
+Você é um especialista em ler folhas manuscritas de controle de consumo de chocolates corporativo.
+Analise com extrema atenção a tabela manuscrita anexada.
 
-A tabela contém as seguintes colunas de chocolates:
+A tabela contém 4 colunas de produtos:
 1. "Trufa 30g" (R$ 5.29)
 2. "Tablete 20g" (R$ 5.29)
 3. "Trufa 13.5g" (R$ 3.79)
 4. "Tablete 5g" (R$ 1.39)
 
-Para CADA linha preenchida com o nome de uma pessoa:
+Para CADA linha preenchida com o nome legível de uma pessoa:
 - Identifique o "Nome Completo" e o "Setor".
-- Identifique a quantidade anotada em cada coluna de chocolate (números 1, 2, 3 ou traços romanos I, II, III).
+- Identifique a quantidade anotada em cada coluna (números como 1, 2, 3 ou traços romanos I, II, III).
 - REGRA CRUCIAL DE PAGAMENTO:
-  * Se estiver escrito "PG", "pago", "p", "(PG)" junto da quantidade, o campo pagoNaHora DEVE ser true.
-  * Se houver apenas o número ou traço SEM indicação de pago, o campo pagoNaHora DEVE ser false (é fiado a cobrar).
+  * Se estiver escrito "PG", "pago", "p", "(PG)" ou similar junto da quantidade, marque pagoNaHora: true.
+  * Se houver apenas o número/quantidade SEM menção de pago, marque pagoNaHora: false (fiado para cobrar no fim do mês).
 
-Retorne ESTRITAMENTE um JSON no formato (sem blocos de markdown adicionais além do json):
+Retorne ESTRITAMENTE um array JSON:
 [
   {
-    "nomeCliente": "Nome da pessoa",
-    "setor": "Setor anotado",
-    "nomeChocolate": "Nome exato da coluna (ex: Trufa 30g, Tablete 20g, Trufa 13.5g ou Tablete 5g)",
+    "nomeCliente": "Nome identificado",
+    "setor": "Setor",
+    "nomeChocolate": "Trufa 30g",
     "quantidade": 1,
     "pagoNaHora": false
   }
 ]
 `;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.chaveApi}`;
+        let ultimoErro = null;
 
-        const resposta = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        {
-                            inline_data: {
-                                mime_type: arquivoImagem.type || "image/jpeg",
-                                data: imagemBase64
-                            }
+        // Tenta com gemini-3.8-flash; se o endpoint falhar, tenta os irmãos 2.5 / 2.0 automaticamente
+        for (const modelo of this.modelosDisponiveis) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${this.chaveApi}`;
+
+                const resposta = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: promptInstrucoes },
+                                {
+                                    inlineData: {
+                                        mimeType: arquivoImagem.type || "image/jpeg",
+                                        data: imagemBase64
+                                    }
+                                }
+                            ]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            responseMimeType: "application/json"
                         }
-                    ]
-                }],
-                generationConfig: {
-                    temperature: 0.1, // Baixa temperatura para precisão máxima
-                    response_mime_type: "application/json"
+                    })
+                });
+
+                if (!resposta.ok) {
+                    const erroJson = await resposta.json().catch(() => ({}));
+                    throw new Error(`[Modelo ${modelo}] ${erroJson.error?.message || resposta.statusText}`);
                 }
-            })
-        });
 
-        if (!resposta.ok) {
-            const erroJson = await resposta.json();
-            throw new Error(`Falha na IA do Gemini: ${erroJson.error?.message || resposta.statusText}`);
+                const dados = await resposta.json();
+                const textoGerado = dados.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!textoGerado) {
+                    throw new Error(`Modelo ${modelo} não retornou conteúdo legível.`);
+                }
+
+                const jsonLimpo = this.limparJsonResposta(textoGerado);
+                return JSON.parse(jsonLimpo);
+
+            } catch (err) {
+                console.warn(`Tentativa com ${modelo} falhou:`, err.message);
+                ultimoErro = err;
+                // Continua para o próximo modelo do loop
+            }
         }
 
-        const dadosResposta = await resposta.json();
-        const textoGerado = dadosResposta.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!textoGerado) {
-            throw new Error("A IA não conseguiu interpretar o texto da imagem.");
-        }
-
-        try {
-            return JSON.parse(textoGerado);
-        } catch (e) {
-            console.error("Texto retornado:", textoGerado);
-            throw new Error("Erro ao converter resposta da IA em dados válidos.");
-        }
+        throw new Error(`Falha na IA: ${ultimoErro?.message || 'Nenhum modelo respondeu com sucesso.'}`);
     }
 }
