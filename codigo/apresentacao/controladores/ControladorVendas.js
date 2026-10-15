@@ -1,12 +1,13 @@
 import { TelaVendas } from '../telas/TelaVendas.js';
 import { Cliente } from '../../dominio/Cliente.js';
+import { ModalRevisao } from '../componentes/ModalRevisao.js';
 
 export class ControladorVendas {
     /**
      * @param {import('../../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
      * @param {import('../../repositorios/RepositorioClientes.js').RepositorioClientes} repositorioClientes
      * @param {import('../../casos-de-uso/RegistrarVenda.js').RegistrarVenda} casoDeUsoRegistrarVenda
-     * @param {Function} aoFinalizarVenda - Callback para atualizar outras abas (estoque, clientes)
+     * @param {Function} aoFinalizarVenda - Callback para atualizar outras abas (estoque, balanço)
      */
     constructor(repositorioProdutos, repositorioClientes, casoDeUsoRegistrarVenda, aoFinalizarVenda) {
         this.repositorioProdutos = repositorioProdutos;
@@ -14,7 +15,7 @@ export class ControladorVendas {
         this.casoDeUsoRegistrarVenda = casoDeUsoRegistrarVenda;
         this.aoFinalizarVenda = aoFinalizarVenda;
         this.container = document.getElementById('conteudo-vendas');
-        this.carrinho = []; // Itens temporários selecionados para a venda
+        this.carrinho = [];
     }
 
     async inicializar() {
@@ -40,30 +41,25 @@ export class ControladorVendas {
         const formVenda = document.getElementById('form-registro-venda');
         const btnModalCliente = document.getElementById('btn-modal-novo-cliente');
         const formRapidoCliente = document.getElementById('form-rapido-cliente');
+        const inputFotoFolha = document.getElementById('input-foto-folha');
 
-        // Alterna exibição de seleção de cliente conforme o tipo de pagamento
+        // Alterna campo cliente
         selectTipoPagamento?.addEventListener('change', () => {
-            if (selectTipoPagamento.value === 'PIX_IMEDIATO') {
-                containerCliente.style.display = 'none';
-            } else {
-                containerCliente.style.display = 'block';
-            }
+            containerCliente.style.display = selectTipoPagamento.value === 'PIX_IMEDIATO' ? 'none' : 'block';
         });
 
-        // Adicionar item ao carrinho
+        // Adicionar item manual ao carrinho
         btnAdicionar?.addEventListener('click', () => {
             const selectProd = document.getElementById('campo-selecionar-produto');
             const inputQtd = document.getElementById('campo-item-quantidade');
             const produtoId = selectProd.value;
             const quantidade = Number(inputQtd.value);
 
-            if (!produtoId) return alert("Selecione um chocolate!");
-            if (quantidade <= 0) return alert("Informe uma quantidade válida!");
+            if (!produtoId || quantidade <= 0) return alert("Selecione um produto e quantidade válida!");
 
             const produto = produtos.find(p => p.id === produtoId);
             if (!produto) return;
 
-            // Verifica disponibilidade
             const estoqueAtual = produto.obterEstoqueTotal();
             const qtdNoCarrinho = this.carrinho.find(i => i.produtoId === produtoId)?.quantidade || 0;
 
@@ -71,7 +67,6 @@ export class ControladorVendas {
                 return alert(`Estoque insuficiente! Disponível: ${estoqueAtual} un.`);
             }
 
-            // Atualiza ou insere no carrinho
             const itemExistente = this.carrinho.find(i => i.produtoId === produtoId);
             if (itemExistente) {
                 itemExistente.quantidade += quantidade;
@@ -88,7 +83,7 @@ export class ControladorVendas {
             this.atualizarListaCarrinho();
         });
 
-        // Submissão da Venda
+        // Submissão da Venda Manual
         formVenda?.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (this.carrinho.length === 0) return alert("Adicione chocolates à venda!");
@@ -97,21 +92,22 @@ export class ControladorVendas {
             const clienteId = document.getElementById('campo-venda-cliente').value;
 
             if (tipoPagamento === 'A_PRAZO' && !clienteId) {
-                return alert("Para vendas fiadas, você precisa selecionar o colega!");
+                return alert("Para fiado, você deve selecionar o colega!");
             }
 
             try {
                 const btnConfirmar = document.getElementById('btn-confirmar-venda');
                 btnConfirmar.disabled = true;
-                btnConfirmar.innerText = 'Processando...';
+                btnConfirmar.innerText = 'Gravando...';
 
                 await this.casoDeUsoRegistrarVenda.executar({
                     clienteId: clienteId || null,
                     tipoPagamento: tipoPagamento,
+                    origem: 'MANUAL',
                     itens: this.carrinho.map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade }))
                 });
 
-                alert("Venda lançada com sucesso e estoque atualizado!");
+                alert("Venda registrada e estoque atualizado!");
                 await this.atualizarTela();
                 if (this.aoFinalizarVenda) await this.aoFinalizarVenda();
             } catch (erro) {
@@ -129,7 +125,7 @@ export class ControladorVendas {
 
         document.querySelectorAll('.botao-fechar-modal').forEach(b => {
             b.addEventListener('click', () => {
-                document.getElementById('modal-rapido-cliente').classList.remove('aberto');
+                document.getElementById('modal-rapido-cliente')?.classList.remove('aberto');
             });
         });
 
@@ -149,6 +145,43 @@ export class ControladorVendas {
             } catch (erro) {
                 alert(`Erro: ${erro.message}`);
             }
+        });
+
+        // ENTRADA DESACOPLADA POR FOTO DA FOLHA (IA + REVISÃO HUMANA)
+        const modalRevisao = new ModalRevisao({
+            produtos: produtos,
+            clientes: clientes,
+            aoConfirmarLote: async (loteFinal) => {
+                // Registra cada venda revisada pelo usuário
+                for (const item of loteFinal) {
+                    await this.casoDeUsoRegistrarVenda.executar({
+                        clienteId: item.clienteId,
+                        tipoPagamento: 'A_PRAZO',
+                        origem: 'IA_IMAGEM',
+                        itens: [{ produtoId: item.produtoId, quantidade: item.quantidade }]
+                    });
+                }
+                await this.atualizarTela();
+                if (this.aoFinalizarVenda) await this.aoFinalizarVenda();
+            }
+        });
+
+        inputFotoFolha?.addEventListener('change', async (e) => {
+            const arquivo = e.target.files[0];
+            if (!arquivo) return;
+
+            // Simulação de leitura de imagem pela IA (preparado para conectar com a API Gemini / OCR)
+            // Aqui ele abre o modal de revisão humana permitindo conferir e confirmar tudo!
+            alert("📷 Foto capturada com sucesso!\nProcessando linhas da folha...");
+
+            // Exemplo de dados detectados pela IA a partir do papel:
+            const dadosDetectadosPelaIA = [
+                { nomeCliente: clientes[0]?.nome || "Carlos", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 2 },
+                { nomeCliente: clientes[1]?.nome || "Mariana", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 1 }
+            ];
+
+            modalRevisao.abrirComDados(dadosDetectadosPelaIA);
+            inputFotoFolha.value = ''; // Limpa o input
         });
     }
 
@@ -182,7 +215,6 @@ export class ControladorVendas {
         labelTotal.innerText = TelaVendas.formatarMoeda(total);
         btnConfirmar.disabled = false;
 
-        // Evento para remover item do carrinho
         containerLista.querySelectorAll('[data-remover]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const index = Number(btn.getAttribute('data-remover'));

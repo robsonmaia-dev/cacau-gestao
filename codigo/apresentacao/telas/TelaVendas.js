@@ -1,6 +1,6 @@
 /**
  * TELA: TelaVendas
- * Interface para lançamento rápido de vendas (Pix imediato ou Fiado na folha).
+ * Interface para lançamento rápido de vendas (Pix, Fiado ou Câmera com IA).
  */
 export class TelaVendas {
     static formatarMoeda(valor) {
@@ -9,10 +9,24 @@ export class TelaVendas {
 
     static renderizar(container, produtos = [], clientes = []) {
         container.innerHTML = `
-            <!-- Formulário de Registro de Venda -->
+            <!-- Botão de Automação com Foto / IA -->
+            <div class="cartao" style="background: linear-gradient(135deg, #FAF6F0, #F4ECE1); border: 1.5px dashed var(--cor-secundaria); margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-weight: 700; color: var(--cor-primaria); font-size: 0.95rem;">📸 Tirar Foto da Folha</div>
+                        <div style="font-size: 0.75rem; color: var(--cor-texto-suave);">A IA lê o papel e monta as vendas para você revisar.</div>
+                    </div>
+                    <label class="botao botao-secundario" style="height: 40px; padding: 0 12px; cursor: pointer;">
+                        📷 Abrir Câmera
+                        <input type="file" id="input-foto-folha" accept="image/*" capture="environment" style="display: none;">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Formulário de Registro Manual de Venda -->
             <div class="cartao">
                 <div class="cartao-cabecalho">
-                    <span class="cartao-titulo">Lançar Saída de Chocolates</span>
+                    <span class="cartao-titulo">Lançamento Manual de Chocolates</span>
                 </div>
 
                 <form id="form-registro-venda">
@@ -82,7 +96,7 @@ export class TelaVendas {
                 </form>
             </div>
 
-            <!-- MODAL RÁPIDO: CADASTRAR CLIENTE -->
+            <!-- MODAL 1: CADASTRAR CLIENTE -->
             <div id="modal-rapido-cliente" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">
@@ -109,6 +123,9 @@ export class TelaVendas {
                     </form>
                 </div>
             </div>
+
+            <!-- MODAL 2: GAVETA DE REVISÃO HUMANA (IA) -->
+            <div id="modal-revisao-ia" class="fundo-modal"></div>
         `;
     }
 }

@@ -1,12 +1,6 @@
 import { TelaCobranca } from '../telas/TelaCobranca.js';
 
 export class ControladorCobranca {
-    /**
-     * @param {import('../../repositorios/RepositorioClientes.js').RepositorioClientes} repositorioClientes
-     * @param {import('../../casos-de-uso/GerarCobrancaMensal.js').GerarCobrancaMensal} casoDeUsoGerarCobranca
-     * @param {import('../../casos-de-uso/RegistrarPagamento.js').RegistrarPagamento} casoDeUsoRegistrarPagamento
-     * @param {Function} aoAtualizarDados - Callback para atualizar outras telas
-     */
     constructor(repositorioClientes, casoDeUsoGerarCobranca, casoDeUsoRegistrarPagamento, aoAtualizarDados) {
         this.repositorioClientes = repositorioClientes;
         this.casoDeUsoGerarCobranca = casoDeUsoGerarCobranca;
@@ -14,7 +8,6 @@ export class ControladorCobranca {
         this.aoAtualizarDados = aoAtualizarDados;
         this.container = document.getElementById('conteudo-cobranca');
 
-        // Carrega configurações salvas localmente
         this.chavePix = localStorage.getItem('cacau_chave_pix') || '';
         this.linkCatalogo = localStorage.getItem('cacau_link_catalogo') || '';
     }
@@ -36,7 +29,6 @@ export class ControladorCobranca {
     }
 
     vincularEventos(devedores) {
-        // Salva Chave Pix e Catálogo automaticamente ao digitar
         const inputPix = document.getElementById('campo-chave-pix');
         const inputCatalogo = document.getElementById('campo-link-catalogo');
 
@@ -50,7 +42,7 @@ export class ControladorCobranca {
             localStorage.setItem('cacau_link_catalogo', this.linkCatalogo);
         });
 
-        // Botões de Gerar Cobrança (Teams / WhatsApp)
+        // DISPARO INTELIGENTE: TEAMS OU WHATSAPP
         document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!this.chavePix) {
@@ -68,20 +60,27 @@ export class ControladorCobranca {
                 });
 
                 if (resultado.canal === 'WHATSAPP') {
-                    // Abre diretamente o WhatsApp com o texto preenchido
+                    // Abre o WhatsApp Web ou App do celular com o chat e texto prontos
                     window.open(resultado.linkWhatsApp, '_blank');
                 } else {
-                    // Copia o texto para a área de transferência para colar no Teams
-                    navigator.clipboard.writeText(resultado.mensagemTexto).then(() => {
-                        alert(`📋 Mensagem copiada com sucesso!\n\nAgora basta abrir o Teams no chat de "${cliente.nome}" e colar (Ctrl+V).`);
-                    }).catch(() => {
+                    // TEAMS: Copia a mensagem com formatação e tenta abrir o chat do Teams
+                    try {
+                        await navigator.clipboard.writeText(resultado.mensagemTexto);
+                        const abrirTeams = confirm(
+                            `📋 Mensagem copiada com sucesso!\n\nDeseja abrir o Microsoft Teams no chat de "${cliente.nome}" agora?`
+                        );
+                        if (abrirTeams) {
+                            // Protocolo universal de abertura do Teams pelo e-mail
+                            window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
+                        }
+                    } catch (e) {
                         prompt("Copie a mensagem abaixo para enviar no Teams:", resultado.mensagemTexto);
-                    });
+                    }
                 }
             });
         });
 
-        // Botão para Abrir Modal de Pagamento
+        // Baixa de Pagamento
         document.querySelectorAll('.btn-quitar-debito').forEach(btn => {
             btn.addEventListener('click', () => {
                 const clienteId = btn.getAttribute('data-cliente-id');
@@ -95,14 +94,12 @@ export class ControladorCobranca {
             });
         });
 
-        // Fechar Modal
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.getElementById('modal-pagamento-cobranca').classList.remove('aberto');
             });
         });
 
-        // Confirmar Pagamento no Modal
         const formPagamento = document.getElementById('form-pagamento-cobranca');
         formPagamento?.addEventListener('submit', async (e) => {
             e.preventDefault();

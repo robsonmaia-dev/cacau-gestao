@@ -12,6 +12,7 @@ import { ObterBalancoFinanceiro } from './casos-de-uso/ObterBalancoFinanceiro.js
 
 import { ControladorEstoque } from './apresentacao/controladores/ControladorEstoque.js';
 import { ControladorVendas } from './apresentacao/controladores/ControladorVendas.js';
+import { ControladorClientes } from './apresentacao/controladores/ControladorClientes.js';
 import { ControladorCobranca } from './apresentacao/controladores/ControladorCobranca.js';
 import { ControladorRelatorios } from './apresentacao/controladores/ControladorRelatorios.js';
 
@@ -38,13 +39,11 @@ async function iniciarAplicacao() {
     console.log("🍫 Inicializando Cacau Gestão...");
 
     try {
-        // Repositórios
         const repoProdutos = new RepositorioProdutos();
         const repoClientes = new RepositorioClientes();
         const repoVendas = new RepositorioVendas();
         const repoPerdas = new RepositorioPerdas();
 
-        // Casos de Uso
         const ucComprarEstoque = new ComprarEstoque(repoProdutos);
         const ucRegistrarVenda = new RegistrarVenda(repoProdutos, repoClientes, repoVendas);
         const ucGerarCobranca = new GerarCobrancaMensal(repoVendas);
@@ -52,31 +51,36 @@ async function iniciarAplicacao() {
         const ucRegistrarPerda = new RegistrarPerda(repoProdutos, repoPerdas);
         const ucBalanco = new ObterBalancoFinanceiro(repoVendas, repoPerdas, repoProdutos, repoClientes);
 
-        // Controladores
-        const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque);
+        let ctrlVendas = null;
         let ctrlCobranca = null;
         let ctrlRelatorios = null;
+        let ctrlClientes = null;
+
+        const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque);
 
         const atualizarTudo = async () => {
             await ctrlEstoque.atualizarTela();
+            if (ctrlVendas) await ctrlVendas.atualizarTela();
+            if (ctrlClientes) await ctrlClientes.atualizarTela();
             if (ctrlCobranca) await ctrlCobranca.atualizarTela();
             if (ctrlRelatorios) await ctrlRelatorios.atualizarTela();
         };
 
-        const ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
+        ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
+        ctrlClientes = new ControladorClientes(repoClientes, atualizarTudo);
         ctrlCobranca = new ControladorCobranca(repoClientes, ucGerarCobranca, ucRegistrarPagamento, atualizarTudo);
         ctrlRelatorios = new ControladorRelatorios(ucBalanco, ucRegistrarPerda, repoProdutos, atualizarTudo);
 
-        // Inicializa todas as telas
         await ctrlEstoque.inicializar();
         await ctrlVendas.inicializar();
+        await ctrlClientes.inicializar();
         await ctrlCobranca.inicializar();
         await ctrlRelatorios.inicializar();
 
-        // Troca de abas com atualização em tempo real
         configurarNavegacaoAbas(async (idAba) => {
             if (idAba === 'aba-vendas') await ctrlVendas.atualizarTela();
             if (idAba === 'aba-estoque') await ctrlEstoque.atualizarTela();
+            if (idAba === 'aba-clientes') await ctrlClientes.atualizarTela();
             if (idAba === 'aba-cobranca') await ctrlCobranca.atualizarTela();
             if (idAba === 'aba-relatorios') await ctrlRelatorios.atualizarTela();
         });
