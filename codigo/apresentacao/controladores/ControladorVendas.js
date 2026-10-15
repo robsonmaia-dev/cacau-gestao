@@ -1,6 +1,7 @@
 import { TelaVendas } from '../telas/TelaVendas.js';
 import { Cliente } from '../../dominio/Cliente.js';
 import { ModalRevisao } from '../componentes/ModalRevisao.js';
+import { LerFolhaComIA } from '../../casos-de-uso/LerFolhaComIA.js';
 
 export class ControladorVendas {
     constructor(repositorioProdutos, repositorioClientes, casoDeUsoRegistrarVenda, aoFinalizarVenda) {
@@ -10,6 +11,7 @@ export class ControladorVendas {
         this.aoFinalizarVenda = aoFinalizarVenda;
         this.container = document.getElementById('conteudo-vendas');
         this.carrinho = [];
+      this.chaveGemini = localStorage.getItem('cacau_chave_gemini') || '';
     }
 
     async inicializar() {
@@ -164,15 +166,43 @@ export class ControladorVendas {
         // Função que processa a imagem (seja da Câmera ou da Galeria)
         const processarImagem = async (arquivo) => {
             if (!arquivo) return;
-            alert(`📸 Imagem selecionada: "${arquivo.name}"\nProcessando texto da folha...`);
 
-            // Dados pré-formatados prontos para a revisão humana
-            const dadosDetectados = [
-                { nomeCliente: clientes[0]?.nome || "Mariana", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 2 },
-                { nomeCliente: clientes[1]?.nome || "Carlos", nomeChocolate: produtos[0]?.nome || "Trufa", quantidade: 1 }
-            ];
+            // Se ainda não salvou a chave, solicita uma vez e guarda
+            if (!this.chaveGemini) {
+                const chaveInformada = prompt(
+                    "🔑 Para ativar a IA, cole sua chave gratuita do Google Gemini (pegue em aistudio.google.com):"
+                );
+                if (!chaveInformada || chaveInformada.trim() === '') {
+                    return alert("Sem a chave a leitura automática não funciona.");
+                }
+                this.chaveGemini = chaveInformada.trim();
+                localStorage.setItem('cacau_chave_gemini', this.chaveGemini);
+            }
 
-            modalRevisao.abrirComDados(dadosDetectados);
+            const leitorIA = new LerFolhaComIA(this.chaveGemini);
+
+            try {
+                // Feedback visual de carregamento
+                const btnCamera = document.getElementById('input-foto-camera')?.parentElement;
+                const textoOriginal = btnCamera.innerHTML;
+                btnCamera.innerText = "⏳ Lendo folha...";
+
+                // Chamada real da IA na foto!
+                const itensLidosPelaIA = await leitorIA.processarImagemFolha(arquivo);
+
+                btnCamera.innerHTML = textoOriginal;
+
+                if (!itensLidosPelaIA || itensLidosPelaIA.length === 0) {
+                    return alert("A IA não encontrou anotações legíveis na foto.");
+                }
+
+                // Abre o modal com TODAS as linhas encontradas para você revisar
+                modalRevisao.abrirComDados(itensLidosPelaIA);
+
+            } catch (erro) {
+                alert(`Erro na leitura com IA: ${erro.message}`);
+                console.error(erro);
+            }
         };
 
         inputFotoCamera?.addEventListener('change', (e) => {
