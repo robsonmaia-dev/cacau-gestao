@@ -1,7 +1,6 @@
-import { TelaVendas } from '../telas/TelaVendas.js';
+ import { TelaVendas } from '../telas/TelaVendas.js';
 import { Cliente } from '../../dominio/Cliente.js';
 import { ModalRevisao } from '../componentes/ModalRevisao.js';
-import { LerFolhaComIA } from '../../casos-de-uso/LerFolhaComIA.js';
 
 export class ControladorVendas {
     constructor(repositorioProdutos, repositorioClientes, casoDeUsoRegistrarVenda, aoFinalizarVenda) {
@@ -11,7 +10,6 @@ export class ControladorVendas {
         this.aoFinalizarVenda = aoFinalizarVenda;
         this.container = document.getElementById('conteudo-vendas');
         this.carrinho = [];
-      this.chaveGemini = localStorage.getItem('cacau_chave_gemini') || '';
     }
 
     async inicializar() {
@@ -33,8 +31,14 @@ export class ControladorVendas {
     vincularEventos(produtos, clientes) {
         const selectTipoPagamento = document.getElementById('campo-venda-tipo-pagamento');
         const containerCliente = document.getElementById('container-selecao-cliente');
+        const selectProd = document.getElementById('campo-selecionar-produto');
+        const inputQtd = document.getElementById('campo-item-quantidade');
+        const selectTipoDesconto = document.getElementById('campo-tipo-desconto');
+        const inputValorDesconto = document.getElementById('campo-valor-desconto');
+        const rotuloPrecoFinal = document.getElementById('rotulo-preco-unitario-final');
         const btnAdicionar = document.getElementById('btn-adicionar-carrinho');
         const formVenda = document.getElementById('form-registro-venda');
+
         const btnModalCliente = document.getElementById('btn-modal-novo-cliente');
         const formRapidoCliente = document.getElementById('form-rapido-cliente');
 
@@ -46,10 +50,53 @@ export class ControladorVendas {
             containerCliente.style.display = selectTipoPagamento.value === 'PIX_IMEDIATO' ? 'none' : 'block';
         });
 
-        // Adicionar item manual ao carrinho
+        // CÁLCULO DINÂMICO DE PREÇO COM DESCONTO
+        const calcularPrecoUnitarioFinal = () => {
+            const produtoId = selectProd.value;
+            if (!produtoId) {
+                rotuloPrecoFinal.innerText = "Unitário: R$ 0,00";
+                return 0;
+            }
+
+            const produto = produtos.find(p => p.id === produtoId);
+            if (!produto) return 0;
+
+            const precoTabela = produto.precoVenda;
+            const modo = selectTipoDesconto.value;
+            let precoCalculado = precoTabela;
+
+            if (modo === 'PADRAO') {
+                inputValorDesconto.disabled = true;
+                inputValorDesconto.value = '';
+                inputValorDesconto.placeholder = '-';
+                precoCalculado = precoTabela;
+            } else if (modo === 'PORCENTAGEM') {
+                inputValorDesconto.disabled = false;
+                inputValorDesconto.placeholder = 'Ex: 10';
+                const pct = Number(inputValorDesconto.value) || 0;
+                precoCalculado = Math.max(0, precoTabela * (1 - (pct / 100)));
+            } else if (modo === 'VALOR_FINAL') {
+                inputValorDesconto.disabled = false;
+                inputValorDesconto.placeholder = `Ex: ${precoTabela.toFixed(2)}`;
+                if (inputValorDesconto.value !== '') {
+                    precoCalculado = Number(inputValorDesconto.value) || 0;
+                }
+            }
+
+            rotuloPrecoFinal.innerText = `Unitário: ${TelaVendas.formatarMoeda(precoCalculado)}`;
+            return Number(precoCalculado.toFixed(2));
+        };
+
+        selectProd?.addEventListener('change', () => {
+            selectTipoDesconto.value = 'PADRAO';
+            calcularPrecoUnitarioFinal();
+        });
+
+        selectTipoDesconto?.addEventListener('change', calcularPrecoUnitarioFinal);
+        inputValorDesconto?.addEventListener('input', calcularPrecoUnitarioFinal);
+
+        // ADICIONAR AO CARRINHO COM PREÇO CUSTOMIZADO
         btnAdicionar?.addEventListener('click', () => {
-            const selectProd = document.getElementById('campo-selecionar-produto');
-            const inputQtd = document.getElementById('campo-item-quantidade');
             const produtoId = selectProd.value;
             const quantidade = Number(inputQtd.value);
 
@@ -65,23 +112,25 @@ export class ControladorVendas {
                 return alert(`Estoque insuficiente! Disponível: ${estoqueAtual} un.`);
             }
 
-            const itemExistente = this.carrinho.find(i => i.produtoId === produtoId);
-            if (itemExistente) {
-                itemExistente.quantidade += quantidade;
-            } else {
-                this.carrinho.push({
-                    produtoId: produto.id,
-                    nome: produto.nome,
-                    precoUnitario: produto.precoVenda,
-                    quantidade: quantidade
-                });
-            }
+            const precoUnitarioFinal = calcularPrecoUnitarioFinal();
+            const teveDesconto = precoUnitarioFinal !== produto.precoVenda;
+
+            this.carrinho.push({
+                produtoId: produto.id,
+                nome: produto.nome,
+                precoUnitario: precoUnitarioFinal,
+                precoTabela: produto.precoVenda,
+                teveDesconto: teveDesconto,
+                quantidade: quantidade
+            });
 
             inputQtd.value = 1;
+            selectTipoDesconto.value = 'PADRAO';
+            calcularPrecoUnitarioFinal();
             this.atualizarListaCarrinho();
         });
 
-        // Submissão da Venda Manual
+        // SUBMISSÃO DA VENDA
         formVenda?.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (this.carrinho.length === 0) return alert("Adicione chocolates à venda!");
@@ -102,7 +151,11 @@ export class ControladorVendas {
                     clienteId: clienteId || null,
                     tipoPagamento: tipoPagamento,
                     origem: 'MANUAL',
-                    itens: this.carrinho.map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade }))
+                    itens: this.carrinho.map(i => ({
+                        produtoId: i.produtoId,
+                        quantidade: i.quantidade,
+                        precoVendaPersonalizado: i.precoUnitario
+                    }))
                 });
 
                 alert("Venda registrada e estoque atualizado!");
@@ -145,7 +198,7 @@ export class ControladorVendas {
             }
         });
 
-        // FLUXO DE REVISÃO HUMANA (IA)
+        // REVISÃO HUMANA (IA)
         const modalRevisao = new ModalRevisao({
             produtos: produtos,
             clientes: clientes,
@@ -163,45 +216,24 @@ export class ControladorVendas {
             }
         });
 
-        // Função que processa a imagem (seja da Câmera ou da Galeria)
+        // Chamada da IA por foto
         const processarImagem = async (arquivo) => {
             if (!arquivo) return;
-
-            // Se ainda não salvou a chave, solicita uma vez e guarda
-            if (!this.chaveGemini) {
-                const chaveInformada = prompt(
-                    "🔑 Para ativar a IA, cole sua chave gratuita do Google Gemini (pegue em aistudio.google.com):"
-                );
-                if (!chaveInformada || chaveInformada.trim() === '') {
-                    return alert("Sem a chave a leitura automática não funciona.");
-                }
-                this.chaveGemini = chaveInformada.trim();
-                localStorage.setItem('cacau_chave_gemini', this.chaveGemini);
+            const chave = localStorage.getItem('cacau_chave_gemini');
+            if (!chave) {
+                const informada = prompt("Cole sua chave gratuita da API do Gemini:");
+                if (!informada) return;
+                localStorage.setItem('cacau_chave_gemini', informada.trim());
             }
 
-            const leitorIA = new LerFolhaComIA(this.chaveGemini);
-
             try {
-                // Feedback visual de carregamento
-                const btnCamera = document.getElementById('input-foto-camera')?.parentElement;
-                const textoOriginal = btnCamera.innerHTML;
-                btnCamera.innerText = "⏳ Lendo folha...";
-
-                // Chamada real da IA na foto!
-                const itensLidosPelaIA = await leitorIA.processarImagemFolha(arquivo);
-
-                btnCamera.innerHTML = textoOriginal;
-
-                if (!itensLidosPelaIA || itensLidosPelaIA.length === 0) {
-                    return alert("A IA não encontrou anotações legíveis na foto.");
-                }
-
-                // Abre o modal com TODAS as linhas encontradas para você revisar
-                modalRevisao.abrirComDados(itensLidosPelaIA);
-
-            } catch (erro) {
-                alert(`Erro na leitura com IA: ${erro.message}`);
-                console.error(erro);
+                const { LerFolhaComIA } = await import('../../casos-de-uso/LerFolhaComIA.js');
+                const leitor = new LerFolhaComIA(localStorage.getItem('cacau_chave_gemini'));
+                alert("Processando folha de vendas com IA...");
+                const dados = await leitor.processarImagemFolha(arquivo);
+                modalRevisao.abrirComDados(dados);
+            } catch (err) {
+                alert(`Erro na leitura: ${err.message}`);
             }
         };
 
@@ -233,8 +265,14 @@ export class ControladorVendas {
             const subtotal = item.quantidade * item.precoUnitario;
             total += subtotal;
             return `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px dashed var(--cor-borda);">
-                    <span style="font-size: 0.85rem;"><strong>${item.quantidade}x</strong> ${item.nome}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--cor-borda);">
+                    <div>
+                        <div style="font-size: 0.85rem;"><strong>${item.quantidade}x</strong> ${item.nome}</div>
+                        <div style="font-size: 0.72rem; color: var(--cor-texto-suave);">
+                            ${TelaVendas.formatarMoeda(item.precoUnitario)} cada 
+                            ${item.teveDesconto ? `<span style="color: var(--cor-sucesso); font-weight: bold;">(Desconto aplicado!)</span>` : ''}
+                        </div>
+                    </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-weight: bold; font-size: 0.85rem;">${TelaVendas.formatarMoeda(subtotal)}</span>
                         <button type="button" data-remover="${index}" style="background: none; border: none; color: var(--cor-perigo); font-weight: bold; cursor: pointer;">✕</button>

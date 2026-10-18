@@ -1,6 +1,6 @@
 /**
  * TELA: TelaVendas
- * Interface para lançamento rápido de vendas (Pix, Fiado, Câmera ou Galeria com IA).
+ * Interface de venda com suporte a descontos (preço de tabela, % ou valor customizado).
  */
 export class TelaVendas {
     static formatarMoeda(valor) {
@@ -16,13 +16,11 @@ export class TelaVendas {
                     <div style="font-size: 0.75rem; color: var(--cor-texto-suave);">Tire uma foto ou carregue uma imagem da folha para lançar em lote.</div>
                 </div>
                 
-                <!-- Botões Duplos: Câmera ou Galeria -->
                 <div style="display: flex; gap: 8px;">
                     <label class="botao botao-secundario" style="flex: 1; height: 40px; font-size: 0.8rem; cursor: pointer;">
                         📷 Tirar Foto
                         <input type="file" id="input-foto-camera" accept="image/*" capture="environment" style="display: none;">
                     </label>
-                    
                     <label class="botao botao-suave" style="flex: 1; height: 40px; font-size: 0.8rem; cursor: pointer; border: 1px solid var(--cor-borda);">
                         📁 Da Galeria
                         <input type="file" id="input-foto-arquivo" accept="image/*" style="display: none;">
@@ -33,7 +31,7 @@ export class TelaVendas {
             <!-- Formulário de Registro Manual de Venda -->
             <div class="cartao">
                 <div class="cartao-cabecalho">
-                    <span class="cartao-titulo">Lançamento Manual de Chocolates</span>
+                    <span class="cartao-titulo">Lançamento de Chocolates</span>
                 </div>
 
                 <form id="form-registro-venda">
@@ -64,10 +62,10 @@ export class TelaVendas {
                         </select>
                     </div>
 
-                    <!-- 3. Adicionar Chocolates ao Pedido -->
+                    <!-- 3. Adicionar Chocolates com Opção de Preço / Desconto -->
                     <div class="grupo-campo" style="background-color: #FAF7F5; padding: 12px; border-radius: 8px; border: 1px dashed var(--cor-borda);">
-                        <label class="rotulo-campo">Adicionar Chocolate ao Pedido</label>
-                        <div style="display: flex; gap: 8px;">
+                        <label class="rotulo-campo">Selecionar Chocolate e Quantidade</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                             <select id="campo-selecionar-produto" class="campo-selecao" style="flex: 2;">
                                 <option value="">-- Escolha o chocolate --</option>
                                 ${produtos.filter(p => p.obterEstoqueTotal() > 0).map(p => `
@@ -77,10 +75,30 @@ export class TelaVendas {
                                 `).join('')}
                             </select>
                             <input type="number" id="campo-item-quantidade" class="campo-entrada" value="1" min="1" style="flex: 1; text-align: center;">
-                            <button type="button" id="btn-adicionar-carrinho" class="botao botao-secundario" style="height: 46px; padding: 0 14px;">
-                                +
-                            </button>
                         </div>
+
+                        <!-- Opções de Preço e Desconto -->
+                        <div style="background: #FFFFFF; padding: 10px; border-radius: 6px; border: 1px solid var(--cor-borda); margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; font-weight: 600; color: var(--cor-texto-suave);">Condição de Preço:</span>
+                                <span id="rotulo-preco-unitario-final" style="font-size: 0.85rem; font-weight: 800; color: var(--cor-primaria);">
+                                    Unitário: R$ 0,00
+                                </span>
+                            </div>
+
+                            <div style="display: flex; gap: 6px;">
+                                <select id="campo-tipo-desconto" class="campo-selecao" style="flex: 1.2; height: 38px; font-size: 0.8rem;">
+                                    <option value="PADRAO">Preço de Tabela</option>
+                                    <option value="PORCENTAGEM">% Desconto</option>
+                                    <option value="VALOR_FINAL">Valor Unitário Fixo (R$)</option>
+                                </select>
+                                <input type="number" step="0.01" id="campo-valor-desconto" class="campo-entrada" placeholder="-" style="flex: 0.8; height: 38px; font-size: 0.85rem; text-align: center;" disabled>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-adicionar-carrinho" class="botao botao-secundario botao-bloco" style="height: 42px;">
+                            + Adicionar ao Pedido
+                        </button>
                     </div>
 
                     <!-- 4. Resumo dos Itens Selecionados -->

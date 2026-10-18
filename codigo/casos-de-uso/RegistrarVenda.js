@@ -1,8 +1,8 @@
-import { Venda } from '../dominio/Venda.js';
+ import { Venda } from '../dominio/Venda.js';
 
 /**
  * CASO DE USO: RegistrarVenda
- * Orquestra a baixa no estoque por PEPS (FIFO), cálculo de custos e atualização do fiado.
+ * Orquestra a baixa no estoque por PEPS (FIFO), aceita preço personalizado/desconto e atualiza fiado.
  */
 export class RegistrarVenda {
     /**
@@ -18,10 +18,10 @@ export class RegistrarVenda {
 
     /**
      * @param {Object} dadosVenda
-     * @param {string|null} dadosVenda.clienteId - Obrigatório se tipoPagamento for 'A_PRAZO'
-     * @param {Array<{produtoId: string, quantidade: number}>} dadosVenda.itens
-     * @param {string} dadosVenda.tipoPagamento - 'PIX_IMEDIATO' ou 'A_PRAZO'
-     * @param {string} [dadosVenda.origem] - 'MANUAL' ou 'IA_IMAGEM'
+     * @param {string|null} dadosVenda.clienteId
+     * @param {Array<{produtoId: string, quantidade: number, precoVendaPersonalizado?: number}>} dadosVenda.itens
+     * @param {string} dadosVenda.tipoPagamento
+     * @param {string} [dadosVenda.origem]
      * @param {string} [dadosVenda.observacao]
      */
     async executar({ clienteId, itens, tipoPagamento = 'A_PRAZO', origem = 'MANUAL', observacao = '' }) {
@@ -29,11 +29,10 @@ export class RegistrarVenda {
             throw new Error("A venda precisa ter pelo menos um chocolate selecionado.");
         }
 
-        // 1. Carrega todos os produtos com seus lotes atuais
         const produtosCatalogo = await this.repositorioProdutos.obterTodosComLotes();
         const mapaProdutos = new Map(produtosCatalogo.map(p => [p.id, p]));
 
-        // 2. Validação prévia de estoque antes de qualquer alteração
+        // 1. Validação prévia de estoque
         for (const itemPedido of itens) {
             const produto = mapaProdutos.get(itemPedido.produtoId);
             if (!produto) {
@@ -51,11 +50,16 @@ export class RegistrarVenda {
         const itensVendaProcessados = [];
         const lotesParaAtualizarNoBanco = [];
 
-        // 3. Processamento PEPS (Baixa priorizando os lotes mais próximos do vencimento)
+        // 2. Processamento PEPS (Baixa com preço customizado se houver)
         for (const itemPedido of itens) {
             const produto = mapaProdutos.get(itemPedido.produtoId);
             let quantidadeRestanteParaAbater = Number(itemPedido.quantidade);
             const lotesOrdenados = produto.obterLotesParaVenda();
+
+            // Determina o preço de venda: customizado/com desconto ou o padrão de tabela
+            const precoVendaFinal = (itemPedido.precoVendaPersonalizado !== undefined && Number(itemPedido.precoVendaPersonalizado) > 0)
+                ? Number(Number(itemPedido.precoVendaPersonalizado).toFixed(2))
+                : produto.precoVenda;
 
             for (const lote of lotesOrdenados) {
                 if (quantidadeRestanteParaAbater <= 0) break;
@@ -63,12 +67,11 @@ export class RegistrarVenda {
                 const quantidadeAbatidaDesteLote = lote.abaterQuantidade(quantidadeRestanteParaAbater);
 
                 if (quantidadeAbatidaDesteLote > 0) {
-                    // Registra o item travando o custo exato do lote consumido
                     itensVendaProcessados.push({
                         produtoId: produto.id,
                         nomeProduto: produto.nome,
                         quantidade: quantidadeAbatidaDesteLote,
-                        precoVendaUnitario: produto.precoVenda,
+                        precoVendaUnitario: precoVendaFinal,
                         custoUnitarioReal: lote.precoCustoUnitario,
                         loteId: lote.id
                     });
@@ -79,7 +82,7 @@ export class RegistrarVenda {
             }
         }
 
-        // 4. Cria a entidade Venda (ela calcula automaticamente o valor total e o lucro real)
+        // 3. Cria a entidade Venda
         const novaVenda = new Venda({
             clienteId: clienteId || null,
             itens: itensVendaProcessados,
@@ -88,12 +91,12 @@ export class RegistrarVenda {
             observacao: observacao
         });
 
-        // 5. Persiste as alterações de estoque dos lotes afetados
+        // 4. Salva lotes abatidos
         for (const lote of lotesParaAtualizarNoBanco) {
             await this.repositorioProdutos.salvarLote(lote);
         }
 
-        // 6. Se for Fiado ("A_PRAZO"), atualiza a conta-corrente do cliente
+        // 5. Se for fiado, atualiza o saldo do colega
         let clienteAtualizado = null;
         if (novaVenda.ehFiado()) {
             const clientes = await this.repositorioClientes.obterTodosComHistorico();
@@ -108,7 +111,7 @@ export class RegistrarVenda {
             clienteAtualizado = cliente;
         }
 
-        // 7. Grava o registro da venda no histórico do banco
+        // 6. Grava a venda no histórico
         await this.repositorioVendas.salvarVenda(novaVenda);
 
         return {
