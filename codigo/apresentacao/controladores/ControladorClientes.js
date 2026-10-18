@@ -33,9 +33,10 @@ export class ControladorClientes {
         const selectCanal = document.getElementById('campo-cad-canal');
         const rotuloContato = document.getElementById('rotulo-cad-contato');
         const campoContato = document.getElementById('campo-cad-contato');
+        const campoId = document.getElementById('campo-cad-id');
+        const campoNome = document.getElementById('campo-cad-nome');
 
-        // Alterna o placeholder conforme Teams ou WhatsApp
-        selectCanal?.addEventListener('change', () => {
+        const ajustarRotuloContato = () => {
             if (selectCanal.value === 'WHATSAPP') {
                 rotuloContato.innerText = "Número do WhatsApp (DDD + Número)";
                 campoContato.placeholder = "Ex: 11987654321";
@@ -43,35 +44,46 @@ export class ControladorClientes {
                 rotuloContato.innerText = "E-mail corporativo do Teams";
                 campoContato.placeholder = "Ex: colega@empresa.com";
             }
+        };
+
+        selectCanal?.addEventListener('change', ajustarRotuloContato);
+
+        // Abrir para NOVO CLIENTE (limpa campos)
+        btnAbrirModal?.addEventListener('click', () => {
+            campoId.value = '';
+            campoNome.value = '';
+            selectCanal.value = 'TEAMS';
+            campoContato.value = '';
+            ajustarRotuloContato();
+            document.getElementById('titulo-modal-cliente').innerText = 'Cadastrar Colega de Trabalho';
+            modal.classList.add('aberto');
         });
 
-        // Abrir e fechar modal
-        btnAbrirModal?.addEventListener('click', () => modal.classList.add('aberto'));
+        // Fechar modal
         document.querySelectorAll('.botao-fechar-modal').forEach(b => {
             b.addEventListener('click', () => modal.classList.remove('aberto'));
         });
 
-        // Salvar cliente
-        form?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const novo = new Cliente({
-                    nome: document.getElementById('campo-cad-nome').value,
-                    canalPreferencial: selectCanal.value,
-                    contato: campoContato.value
-                });
+        // BOTÃO EDITAR CLIENTE (Preenche com os dados existentes)
+        document.querySelectorAll('.btn-editar-cliente').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const nome = btn.getAttribute('data-nome');
+                const canal = btn.getAttribute('data-canal');
+                const contato = btn.getAttribute('data-contato');
 
-                await this.repositorioClientes.salvarCliente(novo);
-                modal.classList.remove('aberto');
-                alert(`Colega "${novo.nome}" cadastrado com sucesso!`);
-                await this.atualizarTela();
-                if (this.aoAtualizarDados) await this.aoAtualizarDados();
-            } catch (erro) {
-                alert(`Erro: ${erro.message}`);
-            }
+                campoId.value = id;
+                campoNome.value = nome;
+                selectCanal.value = canal;
+                campoContato.value = contato;
+                ajustarRotuloContato();
+
+                document.getElementById('titulo-modal-cliente').innerText = `Editar: ${nome}`;
+                modal.classList.add('aberto');
+            });
         });
 
-        // Excluir cliente
+        // BOTÃO EXCLUIR CLIENTE (Protegido contra saldos pendentes)
         document.querySelectorAll('.btn-remover-cliente').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
@@ -79,15 +91,51 @@ export class ControladorClientes {
 
                 const cliente = clientes.find(c => c.id === id);
                 if (cliente && cliente.saldoDevedor > 0) {
-                    return alert(`Não é possível excluir ${nome} pois ainda existe saldo devedor de R$ ${cliente.saldoDevedor.toFixed(2)}.`);
+                    return alert(
+                        `⛔ Não é possível excluir "${nome}" porque ainda existe um saldo devedor de R$ ${cliente.saldoDevedor.toFixed(2)} em aberto!\nReceba o valor na aba Cobrança antes de excluir.`
+                    );
                 }
 
-                if (confirm(`Deseja remover "${nome}" do cadastro?`)) {
-                    await this.repositorioClientes.remover(id);
-                    await this.atualizarTela();
-                    if (this.aoAtualizarDados) await this.aoAtualizarDados();
+                if (confirm(`Tem certeza que deseja remover "${nome}" do cadastro?`)) {
+                    try {
+                        await this.repositorioClientes.remover(id);
+                        alert(`Colega "${nome}" removido com sucesso.`);
+                        await this.atualizarTela();
+                        if (this.aoAtualizarDados) await this.aoAtualizarDados();
+                    } catch (erro) {
+                        alert(`Erro ao remover: ${erro.message}`);
+                    }
                 }
             });
+        });
+
+        // SALVAR CLIENTE (INCLUSÃO OU EDIÇÃO)
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idExistente = campoId.value;
+            const nome = campoNome.value;
+            const canal = selectCanal.value;
+            const contato = campoContato.value;
+
+            try {
+                const clienteExistente = idExistente ? clientes.find(c => c.id === idExistente) : null;
+                const clienteParaSalvar = new Cliente({
+                    id: idExistente || undefined,
+                    nome: nome,
+                    canalPreferencial: canal,
+                    contato: contato,
+                    saldoDevedor: clienteExistente ? clienteExistente.saldoDevedor : 0,
+                    historicoPagamentos: clienteExistente ? clienteExistente.historicoPagamentos : []
+                });
+
+                await this.repositorioClientes.salvarCliente(clienteParaSalvar);
+                modal.classList.remove('aberto');
+                alert(`Colega "${clienteParaSalvar.nome}" salvo com sucesso!`);
+                await this.atualizarTela();
+                if (this.aoAtualizarDados) await this.aoAtualizarDados();
+            } catch (erro) {
+                alert(`Erro: ${erro.message}`);
+            }
         });
     }
 }

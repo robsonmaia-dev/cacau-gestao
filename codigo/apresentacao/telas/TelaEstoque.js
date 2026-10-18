@@ -1,6 +1,6 @@
 /**
  * TELA: TelaEstoque
- * Responsável por renderizar o catálogo de produtos, lotes e modais de entrada.
+ * Exibe produtos, lotes, métricas e ações de inclusão, edição e exclusão.
  */
 export class TelaEstoque {
     static formatarMoeda(valor) {
@@ -8,7 +8,6 @@ export class TelaEstoque {
     }
 
     static renderizar(container, produtos = []) {
-        // Cálculos para as métricas rápidas
         let totalUnidades = 0;
         let capitalInvestido = 0;
         let alertasReposicao = 0;
@@ -75,24 +74,49 @@ export class TelaEstoque {
                         const estoque = prod.obterEstoqueTotal();
                         const alerta = prod.precisaDeReposicao();
                         return `
-                            <div class="item-linha">
-                                <div>
-                                    <div class="item-info-principal">${prod.nome}</div>
+                            <div class="item-linha" style="align-items: flex-start; padding: 12px 0;">
+                                <div style="flex: 1;">
+                                    <div class="item-info-principal" style="font-size: 0.95rem;">${prod.nome}</div>
                                     <div class="item-info-secundaria">
-                                        Venda: <strong>${this.formatarMoeda(prod.precoVenda)}</strong> | 
-                                        Custo Médio: ${this.formatarMoeda(prod.calcularCustoMedioAtual())}
+                                        Categoria: <strong>${prod.categoria}</strong> | 
+                                        Venda: <strong style="color: var(--cor-sucesso);">${this.formatarMoeda(prod.precoVenda)}</strong>
                                     </div>
                                     <div class="item-info-secundaria">
+                                        Custo Médio: ${this.formatarMoeda(prod.calcularCustoMedioAtual())} | Mínimo: ${prod.estoqueMinimo} un
+                                    </div>
+                                    <div class="item-info-secundaria" style="margin-top: 4px;">
                                         ${prod.lotes.filter(l => !l.estaEsgotado()).map(l => 
-                                            `• Lote: ${l.quantidadeAtual} un (Custo: ${this.formatarMoeda(l.precoCustoUnitario)} - Vence: ${l.dataValidade || 'S/D'})`
-                                        ).join('<br>')}
+                                            `• Lote: ${l.quantidadeAtual} un (Custo: ${this.formatarMoeda(l.precoCustoUnitario)} | Vence: ${l.dataValidade || 'S/D'})`
+                                        ).join('<br>') || '<em style="color: var(--cor-texto-suave);">Sem lotes ativos</em>'}
                                     </div>
                                 </div>
-                                <div style="text-align: right;">
+
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                                     <span class="etiqueta ${alerta ? 'etiqueta-alerta' : 'etiqueta-sucesso'}">
                                         ${estoque} un
                                     </span>
-                                    ${alerta ? '<div style="font-size: 0.65rem; color: var(--cor-alerta); font-weight: bold; margin-top: 3px;">Comprar mais!</div>' : ''}
+                                    
+                                    <!-- Botões Editar e Excluir Produto -->
+                                    <div style="display: flex; gap: 6px; margin-top: 4px;">
+                                        <button class="btn-editar-produto" 
+                                            data-id="${prod.id}"
+                                            data-nome="${prod.nome}"
+                                            data-categoria="${prod.categoria}"
+                                            data-preco="${prod.precoVenda}"
+                                            data-minimo="${prod.estoqueMinimo}"
+                                            style="background: #FAF7F5; border: 1px solid var(--cor-borda); border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem;"
+                                            title="Editar Produto">
+                                            ✏️
+                                        </button>
+                                        <button class="btn-excluir-produto" 
+                                            data-id="${prod.id}"
+                                            data-nome="${prod.nome}"
+                                            data-estoque="${estoque}"
+                                            style="background: #FFF0F0; border: 1px solid #FFCDD2; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.85rem; color: var(--cor-perigo);"
+                                            title="Excluir Produto">
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -100,14 +124,15 @@ export class TelaEstoque {
                 </div>
             </div>
 
-            <!-- MODAL 1: CADASTRAR PRODUTO -->
+            <!-- MODAL: CADASTRAR OU EDITAR PRODUTO -->
             <div id="modal-produto" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">
-                        <h3>Novo Produto no Catálogo</h3>
+                        <h3 id="titulo-modal-produto">Novo Produto no Catálogo</h3>
                         <button class="botao-fechar-modal" data-fechar="modal-produto">&times;</button>
                     </div>
                     <form id="form-novo-produto">
+                        <input type="hidden" id="campo-prod-id" value="">
                         <div class="grupo-campo">
                             <label class="rotulo-campo">Nome do Produto</label>
                             <input type="text" id="campo-prod-nome" class="campo-entrada" placeholder="Ex: Trufa LaNut 30g" required>
@@ -123,18 +148,18 @@ export class TelaEstoque {
                         </div>
                         <div class="grupo-campo">
                             <label class="rotulo-campo">Preço Fixo de Venda (R$)</label>
-                            <input type="number" step="0.01" id="campo-prod-preco" class="campo-entrada" placeholder="Ex: 4.50" required>
+                            <input type="number" step="0.01" id="campo-prod-preco" class="campo-entrada" placeholder="Ex: 5.29" required>
                         </div>
                         <div class="grupo-campo">
                             <label class="rotulo-campo">Estoque Mínimo para Alerta</label>
                             <input type="number" id="campo-prod-minimo" class="campo-entrada" value="5" required>
                         </div>
-                        <button type="submit" class="botao botao-primario botao-bloco">Salvar Produto</button>
+                        <button type="submit" id="btn-salvar-produto" class="botao botao-primario botao-bloco">Salvar Produto</button>
                     </form>
                 </div>
             </div>
 
-            <!-- MODAL 2: REGISTRAR COMPRA / NOVO LOTE -->
+            <!-- MODAL: REGISTRAR COMPRA / NOVO LOTE -->
             <div id="modal-compra" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">
