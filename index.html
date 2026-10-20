@@ -9,88 +9,129 @@
     <link rel="stylesheet" href="estilos/variaveis.css">
     <link rel="stylesheet" href="estilos/estrutura.css">
     <link rel="stylesheet" href="estilos/componentes.css">
+    
+    <!-- Biblioteca Page-Flip para a Revista Interativa -->
+    <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
 </head>
 <body>
 
-    <!-- Topo da Aplicação -->
-    <header class="cabecalho-principal">
-        <div>
-            <h1 class="cabecalho-titulo">Cacau Gestão</h1>
-            <span class="cabecalho-subtitulo">Controle de Vendas & Estoque</span>
+    <!-- 1. TELA DE LOGIN BLINDADA (Exibida quando não autenticado) -->
+    <div id="tela-login-bloqueio" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1c0e07, #2d180f); z-index: 9999; padding: 24px; align-items: center; justify-content: center;">
+        <div class="cartao" style="width: 100%; max-width: 380px; padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 6px;">🍫</div>
+                <h2 style="color: var(--cor-primaria); font-size: 1.4rem;">Cacau Gestão</h2>
+                <p style="font-size: 0.8rem; color: var(--cor-texto-suave);">Acesso Restrito & Seguro</p>
+            </div>
+
+            <form id="form-login-seguro">
+                <div class="grupo-campo">
+                    <label class="rotulo-campo">E-mail</label>
+                    <input type="email" id="login-email" class="campo-entrada" placeholder="seu-email@gmail.com" required autocomplete="username">
+                </div>
+
+                <div class="grupo-campo">
+                    <label class="rotulo-campo">Senha</label>
+                    <input type="password" id="login-senha" class="campo-entrada" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="btn-entrar-login" class="botao botao-primario botao-bloco" style="height: 48px; margin-top: 10px;">
+                    Entrar no Sistema
+                </button>
+            </form>
+            <div id="mensagem-erro-login" style="color: var(--cor-perigo); font-size: 0.8rem; text-align: center; margin-top: 12px; display: none;"></div>
         </div>
-        <div id="indicador-conexao" style="font-size: 0.8rem; color: var(--cor-secundaria);">● Local</div>
-    </header>
+    </div>
 
-    <!-- Conteúdo Dinâmico por Aba -->
-    <main class="conteudo-aplicacao">
-        
-        <!-- Aba 1: Vendas Rápidas -->
-        <section id="aba-vendas" class="secao-aba ativa">
-            <h2>Registrar Vendas</h2>
-            <div id="conteudo-vendas">Carregando painel de vendas...</div>
-        </section>
+    <!-- 2. APLICAÇÃO PRINCIPAL (Só renderiza após autenticação) -->
+    <div id="aplicacao-autenticada" style="display: none;">
+        <!-- Topo -->
+        <header class="cabecalho-principal">
+            <div>
+                <h1 class="cabecalho-titulo">Cacau Gestão</h1>
+                <span class="cabecalho-subtitulo">Controle de Vendas & Estoque</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="indicador-conexao" style="font-size: 0.75rem; color: var(--cor-secundaria);">● Conectado</span>
+                <button id="btn-sair-sistema" title="Sair do Sistema" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer;">
+                    Sair
+                </button>
+            </div>
+        </header>
 
-        <!-- Aba 2: Estoque e Lotes -->
-        <section id="aba-estoque" class="secao-aba">
-            <h2>Estoque e Compras</h2>
-            <div id="conteudo-estoque">Carregando controle de estoque...</div>
-        </section>
+        <!-- Conteúdo por Aba -->
+        <main class="conteudo-aplicacao">
+            <section id="aba-vendas" class="secao-aba ativa">
+                <h2>Registrar Vendas</h2>
+                <div id="conteudo-vendas">Carregando painel de vendas...</div>
+            </section>
 
-        <!-- Aba 3: Clientes & Fiado -->
-        <section id="aba-clientes" class="secao-aba">
-            <h2>Clientes e Débitos</h2>
-            <div id="conteudo-clientes">Carregando carteira de clientes...</div>
-        </section>
+            <section id="aba-estoque" class="secao-aba">
+                <h2>Estoque e Compras</h2>
+                <div id="conteudo-estoque">Carregando controle de estoque...</div>
+            </section>
 
-        <!-- Aba 4: Cobrança Teams/Whats -->
-        <section id="aba-cobranca" class="secao-aba">
-            <h2>Cobrança do Mês</h2>
-            <div id="conteudo-cobranca">Carregando mensagens de cobrança...</div>
-        </section>
+            <section id="aba-clientes" class="secao-aba">
+                <h2>Clientes e Débitos</h2>
+                <div id="conteudo-clientes">Carregando carteira de clientes...</div>
+            </section>
 
-        <!-- Aba 5: Relatórios & DRE Básica -->
-        <section id="aba-relatorios" class="secao-aba">
-            <h2>Balanço e Perdas</h2>
-            <div id="conteudo-relatorios">Carregando balanço financeiro...</div>
-        </section>
+            <section id="aba-cobranca" class="secao-aba">
+                <h2>Cobrança do Mês</h2>
+                <div id="conteudo-cobranca">Carregando mensagens de cobrança...</div>
+            </section>
 
-        <!-- Aba 6 (NOVA): Gestão Estratégica & Inteligência -->
-        <section id="aba-gestao" class="secao-aba">
-            <h2>Inteligência & Gestão</h2>
-            <div id="conteudo-gestao">Carregando indicadores estratégicos...</div>
-        </section>
+            <section id="aba-relatorios" class="secao-aba">
+                <h2>Balanço e Perdas</h2>
+                <div id="conteudo-relatorios">Carregando balanço financeiro...</div>
+            </section>
 
-    </main>
+            <section id="aba-gestao" class="secao-aba">
+                <h2>Inteligência & Gestão</h2>
+                <div id="conteudo-gestao">Carregando indicadores estratégicos...</div>
+            </section>
 
-    <!-- Barra Inferior de Navegação (6 Abas) -->
-    <nav class="barra-navegacao">
-        <button class="botao-aba ativa" data-aba="aba-vendas">
-            <span class="icone-aba">🛒</span>
-            <span>Vendas</span>
-        </button>
-        <button class="botao-aba" data-aba="aba-estoque">
-            <span class="icone-aba">📦</span>
-            <span>Estoque</span>
-        </button>
-        <button class="botao-aba" data-aba="aba-clientes">
-            <span class="icone-aba">👥</span>
-            <span>Clientes</span>
-        </button>
-        <button class="botao-aba" data-aba="aba-cobranca">
-            <span class="icone-aba">💬</span>
-            <span>Cobrança</span>
-        </button>
-        <button class="botao-aba" data-aba="aba-relatorios">
-            <span class="icone-aba">📊</span>
-            <span>Balanço</span>
-        </button>
-        <button class="botao-aba" data-aba="aba-gestao">
-            <span class="icone-aba">🎯</span>
-            <span>Gestão</span>
-        </button>
-    </nav>
+            <!-- 7ª ABA (NOVA): REVISTA / CATÁLOGO INTERATIVO -->
+            <section id="aba-catalogo" class="secao-aba">
+                <h2>Catálogo Digital Cacau Show</h2>
+                <div id="conteudo-catalogo">Carregando revista digital...</div>
+            </section>
+        </main>
 
-    <!-- Módulo Principal da Aplicação -->
+        <!-- Barra Inferior de Navegação (7 Abas) -->
+        <nav class="barra-navegacao">
+            <button class="botao-aba ativa" data-aba="aba-vendas">
+                <span class="icone-aba">🛒</span>
+                <span>Vendas</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-estoque">
+                <span class="icone-aba">📦</span>
+                <span>Estoque</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-clientes">
+                <span class="icone-aba">👥</span>
+                <span>Clientes</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-cobranca">
+                <span class="icone-aba">💬</span>
+                <span>Cobrança</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-relatorios">
+                <span class="icone-aba">📊</span>
+                <span>Balanço</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-gestao">
+                <span class="icone-aba">🎯</span>
+                <span>Gestão</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-catalogo">
+                <span class="icone-aba">📖</span>
+                <span>Catálogo</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Módulo Principal -->
     <script type="module" src="codigo/principal.js"></script>
 </body>
 </html>

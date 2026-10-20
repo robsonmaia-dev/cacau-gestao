@@ -1,25 +1,25 @@
+import { AutenticacaoServico } from './repositorios/AutenticacaoServico.js';
+
 // Repositórios
 import { RepositorioProdutos } from './repositorios/RepositorioProdutos.js';
 import { RepositorioClientes } from './repositorios/RepositorioClientes.js';
 import { RepositorioVendas } from './repositorios/RepositorioVendas.js';
 import { RepositorioPerdas } from './repositorios/RepositorioPerdas.js';
 
-// Casos de Uso Operacionais
+// Casos de Uso
 import { ComprarEstoque } from './casos-de-uso/ComprarEstoque.js';
 import { RegistrarVenda } from './casos-de-uso/RegistrarVenda.js';
 import { GerarCobrancaMensal } from './casos-de-uso/GerarCobrancaMensal.js';
 import { RegistrarPagamento } from './casos-de-uso/RegistrarPagamento.js';
 import { RegistrarPerda } from './casos-de-uso/RegistrarPerda.js';
 import { ObterBalancoFinanceiro } from './casos-de-uso/ObterBalancoFinanceiro.js';
-
-// Casos de Uso de Inteligência & Gestão Estratégica
 import { CalcularPontoEquilibrio } from './casos-de-uso/CalcularPontoEquilibrio.js';
 import { CalcularCapitalEstoque } from './casos-de-uso/CalcularCapitalEstoque.js';
 import { ObterDesempenhoProdutos } from './casos-de-uso/ObterDesempenhoProdutos.js';
 import { CalcularPrevisaoReposicao } from './casos-de-uso/CalcularPrevisaoReposicao.js';
 import { ObterPerfilClientes } from './casos-de-uso/ObterPerfilClientes.js';
 
-// Controladores da Interface
+// Controladores
 import { ControladorEstoque } from './apresentacao/controladores/ControladorEstoque.js';
 import { ControladorVendas } from './apresentacao/controladores/ControladorVendas.js';
 import { ControladorClientes } from './apresentacao/controladores/ControladorClientes.js';
@@ -46,17 +46,15 @@ function configurarNavegacaoAbas(aoMudarAba) {
     });
 }
 
-async function iniciarAplicacao() {
-    console.log("🍫 Inicializando Cacau Gestão...");
+async function inicializarSistemaCompleto() {
+    console.log("🍫 Usuário autenticado! Inicializando Cacau Gestão...");
 
     try {
-        // 1. Instancia Repositórios (Nuvem PostgreSQL)
         const repoProdutos = new RepositorioProdutos();
         const repoClientes = new RepositorioClientes();
         const repoVendas = new RepositorioVendas();
         const repoPerdas = new RepositorioPerdas();
 
-        // 2. Instancia Casos de Uso Operacionais
         const ucComprarEstoque = new ComprarEstoque(repoProdutos);
         const ucRegistrarVenda = new RegistrarVenda(repoProdutos, repoClientes, repoVendas);
         const ucGerarCobranca = new GerarCobrancaMensal(repoVendas);
@@ -64,21 +62,18 @@ async function iniciarAplicacao() {
         const ucRegistrarPerda = new RegistrarPerda(repoProdutos, repoPerdas);
         const ucBalanco = new ObterBalancoFinanceiro(repoVendas, repoPerdas, repoProdutos, repoClientes);
 
-        // 3. Instancia Casos de Uso de Gestão Estratégica
         const ucPontoEquilibrio = new CalcularPontoEquilibrio(repoProdutos, repoVendas, repoClientes);
         const ucCapitalEstoque = new CalcularCapitalEstoque(repoProdutos);
         const ucDesempenho = new ObterDesempenhoProdutos(repoProdutos, repoVendas);
         const ucPrevisaoReposicao = new CalcularPrevisaoReposicao(repoProdutos, repoVendas);
         const ucPerfilClientes = new ObterPerfilClientes(repoClientes, repoVendas, repoPerdas);
 
-        // 4. Instancia Controladores
         let ctrlVendas = null;
         let ctrlClientes = null;
         let ctrlCobranca = null;
         let ctrlRelatorios = null;
         let ctrlGestao = null;
 
-        // Callback de Sincronização Geral: Atualiza todas as telas ativas ao mudar dados
         const atualizarTudo = async () => {
             await ctrlEstoque.atualizarTela();
             if (ctrlVendas) await ctrlVendas.atualizarTela();
@@ -101,7 +96,6 @@ async function iniciarAplicacao() {
             ucPerfilClientes
         );
 
-        // 5. Inicialização de cada tela
         await ctrlEstoque.inicializar();
         await ctrlVendas.inicializar();
         await ctrlClientes.inicializar();
@@ -109,7 +103,6 @@ async function iniciarAplicacao() {
         await ctrlRelatorios.inicializar();
         await ctrlGestao.inicializar();
 
-        // 6. Configura a alternância das 6 abas garantindo dados frescos da nuvem
         configurarNavegacaoAbas(async (idAba) => {
             if (idAba === 'aba-vendas') await ctrlVendas.atualizarTela();
             if (idAba === 'aba-estoque') await ctrlEstoque.atualizarTela();
@@ -119,22 +112,62 @@ async function iniciarAplicacao() {
             if (idAba === 'aba-gestao') await ctrlGestao.atualizarTela();
         });
 
-        // 7. Indicador Visual de Conexão no Topo
-        const indicador = document.getElementById('indicador-conexao');
-        if (indicador) {
-            indicador.innerText = '● Nuvem Conectada';
-            indicador.style.color = 'var(--cor-sucesso)';
-        }
+        // Botão de Logout Seguro
+        document.getElementById('btn-sair-sistema')?.addEventListener('click', async () => {
+            if (confirm("Deseja sair do sistema?")) {
+                await AutenticacaoServico.sair();
+            }
+        });
 
-        console.log(" Cacau Gestão: Todas as 6 abas carregadas e operacionais!");
     } catch (erro) {
-        console.error("Erro na inicialização:", erro);
-        const indicador = document.getElementById('indicador-conexao');
-        if (indicador) {
-            indicador.innerText = '● Falha';
-            indicador.style.color = 'var(--cor-perigo)';
-        }
+        console.error("Erro ao carregar dados:", erro);
+        alert(`Erro ao conectar aos dados protegidos: ${erro.message}`);
     }
 }
 
-document.addEventListener('DOMContentLoaded', iniciarAplicacao);
+// GUARDA DE SEGURANÇA (Verifica se está logado antes de carregar o app)
+async function verificarSeguranca() {
+    const telaLogin = document.getElementById('tela-login-bloqueio');
+    const appAutenticada = document.getElementById('aplicacao-autenticada');
+    const formLogin = document.getElementById('form-login-seguro');
+    const msgErro = document.getElementById('mensagem-erro-login');
+
+    const usuario = await AutenticacaoServico.obterUsuarioAtual();
+
+    if (!usuario) {
+        // Bloqueado: Exibe a tela de login
+        telaLogin.style.display = 'flex';
+        appAutenticada.style.display = 'none';
+
+        formLogin?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msgErro.style.display = 'none';
+
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            const btn = document.getElementById('btn-entrar-login');
+
+            btn.disabled = true;
+            btn.innerText = "Autenticando...";
+
+            try {
+                await AutenticacaoServico.entrar(email, senha);
+                telaLogin.style.display = 'none';
+                appAutenticada.style.display = 'block';
+                await inicializarSistemaCompleto();
+            } catch (err) {
+                msgErro.innerText = "E-mail ou senha incorretos.";
+                msgErro.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = "Entrar no Sistema";
+            }
+        });
+    } else {
+        // Usuário já autenticado: Entra direto!
+        telaLogin.style.display = 'none';
+        appAutenticada.style.display = 'block';
+        await inicializarSistemaCompleto();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', verificarSeguranca);
