@@ -26,6 +26,7 @@ import { ControladorClientes } from './apresentacao/controladores/ControladorCli
 import { ControladorCobranca } from './apresentacao/controladores/ControladorCobranca.js';
 import { ControladorRelatorios } from './apresentacao/controladores/ControladorRelatorios.js';
 import { ControladorGestao } from './apresentacao/controladores/ControladorGestao.js';
+import { ControladorCatalogo } from './apresentacao/controladores/ControladorCatalogo.js';
 
 function configurarNavegacaoAbas(aoMudarAba) {
     const botoesNavegacao = document.querySelectorAll('.botao-aba');
@@ -83,6 +84,9 @@ async function inicializarSistemaCompleto() {
             if (ctrlGestao) await ctrlGestao.atualizarTela();
         };
 
+        const ctrlCatalogo = new ControladorCatalogo();
+        await ctrlCatalogo.inicializar();
+
         const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque, atualizarTudo);
         ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
         ctrlClientes = new ControladorClientes(repoClientes, atualizarTudo);
@@ -110,6 +114,7 @@ async function inicializarSistemaCompleto() {
             if (idAba === 'aba-cobranca') await ctrlCobranca.atualizarTela();
             if (idAba === 'aba-relatorios') await ctrlRelatorios.atualizarTela();
             if (idAba === 'aba-gestao') await ctrlGestao.atualizarTela();
+            if (idAba === 'aba-catalogo') await ctrlCatalogo.atualizarTela();
         });
 
         // Botão de Logout Seguro
