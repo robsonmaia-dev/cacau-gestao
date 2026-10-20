@@ -1,15 +1,10 @@
 import { TelaCatalogo } from '../telas/TelaCatalogo.js';
-import { ImportadorCatalogoOficial } from '../../catalogo/ImportadorCatalogoOficial.js';
 import { clienteSupabase } from '../../repositorios/ConfiguracaoBanco.js';
 
 export class ControladorCatalogo {
-    /**
-     * @param {import('../../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
-     */
     constructor(repositorioProdutos) {
         this.repositorioProdutos = repositorioProdutos;
         this.container = document.getElementById('conteudo-catalogo');
-        this.urlCatalogo = ImportadorCatalogoOficial.URL_PADRAO;
         this.whatsapp = localStorage.getItem('cacau_whatsapp_vendas') || '5541984051401';
         this.linkPublico = `${window.location.origin}${window.location.pathname.replace('index.html', '').replace('indice.html', '')}catalogo.html`;
         this.paginas = [];
@@ -22,7 +17,7 @@ export class ControladorCatalogo {
 
     async carregarRevistaPublicada() {
         try {
-            // Tenta carregar do Supabase primeiro
+            // 1. Tenta carregar do Supabase
             const { data } = await clienteSupabase
                 .from('catalogo_publico')
                 .select('*')
@@ -32,13 +27,25 @@ export class ControladorCatalogo {
             if (data && data.paginas && data.paginas.length > 0) {
                 this.paginas = data.paginas;
                 this.whatsapp = data.whatsapp || this.whatsapp;
-            } else {
-                // Se ainda não salvou no banco, carrega do localStorage ou inicializa vazio
-                const local = localStorage.getItem('cacau_revista_dados');
-                if (local) this.paginas = JSON.parse(local);
+                return;
             }
         } catch (e) {
-            console.log("Iniciando montador de revista...");
+            console.log("Catálogo ainda não publicado no Supabase.");
+        }
+
+        // 2. Se não estiver no Supabase, tenta carregar dados_catalogo.json do próprio repositório
+        await this.carregarArquivoJsonDoRepositorio();
+    }
+
+    async carregarArquivoJsonDoRepositorio() {
+        try {
+            const resp = await fetch('./dados_catalogo.json');
+            if (resp.ok) {
+                const dados = await resp.json();
+                this.paginas = dados.paginas || [];
+            }
+        } catch (err) {
+            console.log("Arquivo dados_catalogo.json não encontrado localmente.");
         }
     }
 
@@ -47,22 +54,21 @@ export class ControladorCatalogo {
         TelaCatalogo.renderizar(this.container, {
             paginas: this.paginas,
             whatsapp: this.whatsapp,
-            linkPublico: this.linkPublico,
-            urlCatalogo: this.urlCatalogo
+            linkPublico: this.linkPublico
         });
         this.vincularEventos();
     }
 
     vincularEventos() {
         const btnCopiar = document.getElementById('btn-copiar-link-catalogo');
-        const btnImportar = document.getElementById('btn-importar-catalogo-oficial');
+        const btnRecarregar = document.getElementById('btn-recarregar-json-base');
         const btnCarregarIni = document.getElementById('btn-carregar-inicial');
+        const inputArquivoJson = document.getElementById('input-arquivo-json-catalogo');
         const btnMarcarTodas = document.getElementById('btn-marcar-todas-paginas');
         const btnDesmarcarTodas = document.getElementById('btn-desmarcar-todas-paginas');
         const btnSincronizar = document.getElementById('btn-sincronizar-estoque-catalogo');
         const btnPublicar = document.getElementById('btn-salvar-publicar-catalogo');
 
-        // Copiar Link
         btnCopiar?.addEventListener('click', async () => {
             try {
                 await navigator.clipboard.writeText(this.linkPublico);
@@ -72,33 +78,40 @@ export class ControladorCatalogo {
             }
         });
 
-        // Importar do Site Oficial
-        const acaoImportar = async () => {
-            const inputUrl = document.getElementById('campo-url-catalogo');
-            const url = inputUrl?.value.trim() || this.urlCatalogo;
-
-            const btn = btnImportar || btnCarregarIni;
-            const textoOriginal = btn.innerText;
-            btn.innerText = "⏳ Importando...";
-            btn.disabled = true;
-
-            try {
-                const resultado = await ImportadorCatalogoOficial.importarDeUrl(url);
-                this.paginas = resultado.paginas;
-                this.urlCatalogo = url;
-                alert(`🎉 Sucesso! ${resultado.totalPaginas} páginas e produtos importados do site oficial!`);
-                await this.atualizarTela();
-            } catch (erro) {
-                alert(`Erro ao importar: ${erro.message}`);
-                btn.innerText = textoOriginal;
-                btn.disabled = false;
+        // Carregar do arquivo dados_catalogo.json do repositório
+        const acaoCarregar = async () => {
+            await this.carregarArquivoJsonDoRepositorio();
+            if (this.paginas.length > 0) {
+                alert(`🎉 Sucesso! ${this.paginas.length} páginas carregadas com sucesso!`);
+            } else {
+                alert("O arquivo dados_catalogo.json não foi encontrado. Execute 'python extrair_catalogo.py' para gerá-lo!");
             }
+            await this.atualizarTela();
         };
 
-        btnImportar?.addEventListener('click', acaoImportar);
-        btnCarregarIni?.addEventListener('click', acaoImportar);
+        btnRecarregar?.addEventListener('click', acaoCarregar);
+        btnCarregarIni?.addEventListener('click', acaoCarregar);
 
-        // Marcar / Desmarcar Todas as Páginas
+        // Carregar via upload de arquivo JSON direto no navegador
+        inputArquivoJson?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (evento) => {
+                try {
+                    const dados = JSON.parse(evento.target.result);
+                    this.paginas = dados.paginas || [];
+                    alert(`🎉 ${this.paginas.length} páginas carregadas do arquivo!`);
+                    await this.atualizarTela();
+                } catch (err) {
+                    alert("Arquivo JSON inválido.");
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // Marcar / Desmarcar Páginas
         btnMarcarTodas?.addEventListener('click', () => {
             document.querySelectorAll('.chk-pagina').forEach(c => c.checked = true);
         });
@@ -107,7 +120,6 @@ export class ControladorCatalogo {
             document.querySelectorAll('.chk-pagina').forEach(c => c.checked = false);
         });
 
-        // Alternar checkboxes da página
         document.querySelectorAll('.chk-pagina').forEach(chk => {
             chk.addEventListener('change', () => {
                 const pagNum = chk.getAttribute('data-pag');
@@ -117,7 +129,7 @@ export class ControladorCatalogo {
             });
         });
 
-        // Sincronizar com o Estoque Real do Supabase
+        // Sincronizar com Estoque Real do Supabase
         btnSincronizar?.addEventListener('click', async () => {
             if (!this.repositorioProdutos) return;
             const produtosEstoque = await this.repositorioProdutos.obterTodosComLotes();
@@ -139,10 +151,10 @@ export class ControladorCatalogo {
                 }
             });
 
-            alert(`⚡ Estoque sincronizado! ${ajustados} itens tiveram disponibilidade ajustada conforme o estoque real.`);
+            alert(`⚡ Estoque sincronizado! ${ajustados} itens ajustados conforme o estoque real.`);
         });
 
-        // PUBLICAR REVISTA (SALVA NO SUPABASE PARA TODOS OS CLIENTES)
+        // PUBLICAR REVISTA PARA OS CLIENTES NO SUPABASE
         btnPublicar?.addEventListener('click', async () => {
             const inputWhats = document.getElementById('campo-whats-vendedor');
             const whats = inputWhats.value.replace(/\D/g, '');
@@ -152,7 +164,6 @@ export class ControladorCatalogo {
             this.whatsapp = whatsFinal;
             localStorage.setItem('cacau_whatsapp_vendas', whatsFinal);
 
-            // Captura o estado das páginas e produtos selecionados
             const paginasAtualizadas = this.paginas.map(p => {
                 const chkPag = document.querySelector(`.chk-pagina[data-pag="${p.numero}"]`);
                 const ativa = chkPag ? chkPag.checked : p.ativa;
@@ -173,12 +184,10 @@ export class ControladorCatalogo {
             });
 
             this.paginas = paginasAtualizadas;
-            localStorage.setItem('cacau_revista_dados', JSON.stringify(paginasAtualizadas));
 
-            // Grava no Supabase para os clientes acessarem em catalogo.html
             try {
                 btnPublicar.disabled = true;
-                btnPublicar.innerText = "Publicando na Nuvem...";
+                btnPublicar.innerText = "Publicando...";
 
                 await clienteSupabase.from('catalogo_publico').upsert({
                     id: 'principal',
@@ -190,7 +199,7 @@ export class ControladorCatalogo {
                 alert("🎉 Revista Digital publicada com sucesso!\nTodos os clientes já estão vendo as novas páginas e estoques atualizados.");
                 await this.atualizarTela();
             } catch (e) {
-                alert(`Erro ao publicar no banco: ${e.message}`);
+                alert(`Erro ao publicar: ${e.message}`);
                 btnPublicar.disabled = false;
                 btnPublicar.innerText = "💾 Publicar Revista para Clientes";
             }

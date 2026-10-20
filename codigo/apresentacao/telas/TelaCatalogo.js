@@ -7,26 +7,16 @@ export class TelaCatalogo {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
     }
 
-    static renderizar(container, { paginas = [], whatsapp = '', linkPublico = '', urlCatalogo = '' }) {
+    static renderizar(container, { paginas = [], whatsapp = '', linkPublico = '' }) {
         container.innerHTML = `
-            <!-- 1. PAINEL DE IMPORTAÇÃO E CONFIGURAÇÃO -->
+            <!-- 1. PAINEL DE CONTROLE -->
             <div class="cartao" style="background: linear-gradient(135deg, #FAF6F0, #F3E5D8); border: 1.5px solid var(--cor-secundaria);">
                 <div class="cartao-cabecalho">
                     <span class="cartao-titulo">⚙️ Montador de Revista Digital</span>
                 </div>
-                
-                <div class="grupo-campo">
-                    <label class="rotulo-campo">URL do Catálogo Oficial da Cacau Show:</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="campo-url-catalogo" class="campo-entrada" value="${urlCatalogo}" placeholder="https://catalogo.cacaushow.com.br/..." style="background:#FFF; font-size: 0.8rem;">
-                        <button id="btn-importar-catalogo-oficial" class="botao botao-secundario" style="height: 46px; white-space: nowrap;">
-                            🔄 Importar
-                        </button>
-                    </div>
-                </div>
 
                 <div class="grupo-campo">
-                    <label class="rotulo-campo">WhatsApp para Receber os Pedidos dos Clientes:</label>
+                    <label class="rotulo-campo">WhatsApp para Receber os Pedidos (DDD + Número):</label>
                     <input type="text" id="campo-whats-vendedor" class="campo-entrada" value="${whatsapp}" placeholder="Ex: 5541984051401" style="background:#FFF;">
                 </div>
 
@@ -43,7 +33,16 @@ export class TelaCatalogo {
 
             <!-- 2. BARRA DE AÇÕES DO MONTADOR -->
             <div class="cartao" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; background: #FFF;">
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <button id="btn-recarregar-json-base" class="botao botao-secundario" style="height: 38px; font-size: 0.75rem;">
+                        🔄 Carregar Catálogo
+                    </button>
+                    
+                    <label class="botao botao-suave" style="height: 38px; font-size: 0.75rem; cursor: pointer; border: 1px solid var(--cor-borda);">
+                        📁 Carregar JSON
+                        <input type="file" id="input-arquivo-json-catalogo" accept=".json" style="display: none;">
+                    </label>
+
                     <button id="btn-marcar-todas-paginas" class="botao botao-suave" style="height: 38px; font-size: 0.75rem;">
                         Marcar Todas
                     </button>
@@ -60,7 +59,7 @@ export class TelaCatalogo {
                 </button>
             </div>
 
-            <!-- 3. GRADE DE PÁGINAS E PRODUTOS (EXATAMENTE COMO O SCRIPT PYTHON) -->
+            <!-- 3. GRADE DE PÁGINAS E PRODUTOS -->
             <div id="grade-paginas-montador" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px;">
                 ${paginas.length === 0 ? `
                     <div class="cartao" style="grid-column: 1 / -1; text-align: center; padding: 30px;">
@@ -83,7 +82,7 @@ export class TelaCatalogo {
                             <img src="${p.imagem}" style="width: 90px; height: 125px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; background: #FAFAFA;" loading="lazy">
                             <div style="flex-grow: 1; overflow-y: auto; max-height: 125px;">
                                 ${p.produtos.length === 0 ? `
-                                    <span style="color: #999; font-size: 0.75rem;">Página institucional / sem itens clicáveis.</span>
+                                    <span style="color: #999; font-size: 0.75rem;">Página sem produtos clicáveis.</span>
                                 ` : p.produtos.map(prod => `
                                     <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; margin: 3px 0; background: #fafafa; padding: 4px 6px; border-radius: 4px; border: 1px solid #eee; cursor: pointer;">
                                         <span style="max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
