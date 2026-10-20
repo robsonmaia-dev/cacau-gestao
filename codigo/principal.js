@@ -84,7 +84,7 @@ async function inicializarSistemaCompleto() {
             if (ctrlGestao) await ctrlGestao.atualizarTela();
         };
 
-        const ctrlCatalogo = new ControladorCatalogo();
+        const ctrlCatalogo = new ControladorCatalogo(repoProdutos);
         await ctrlCatalogo.inicializar();
 
         const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque, atualizarTudo);
