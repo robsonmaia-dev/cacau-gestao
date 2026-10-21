@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,32 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        body {
-            background: #1c0e07;
-            color: #fff;
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        header {
-            width: 100%;
-            padding: 14px;
-            background: rgba(0, 0, 0, 0.5);
-            text-align: center;
-            font-size: 0.85rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background: #1c0e07; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; align-items: center; }
+        header { width: 100%; padding: 14px; background: rgba(0,0,0,0.5); text-align: center; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        
         .flipbook-container {
             margin: 15px auto;
             display: flex;
@@ -47,7 +24,7 @@
             background: #fff;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         .page img.bg-page {
@@ -59,28 +36,28 @@
             object-fit: cover;
         }
 
-        /* Botão Disponível (+) */
+        /* Botão do Produto com proteção contra arrasto */
         .hotspot-prod {
             position: absolute;
             background: #25d366;
             color: #fff;
             border: 2px solid #fff;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transform: translate(-50%, -50%);
-            transition: transform 0.2s;
-            z-index: 25;
+            transition: transform 0.2s, background 0.2s;
+            z-index: 100; /* Fica acima da camada de virada de página */
             user-select: none;
+            touch-action: manipulation;
         }
-
         .hotspot-prod:active {
             transform: translate(-50%, -50%) scale(1.2);
             background: #1eb954;
@@ -99,26 +76,6 @@
             display: none;
         }
 
-        /* Selo de ESGOTADO */
-        .hotspot-esgotado {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            background: rgba(220, 38, 38, 0.92);
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 12px;
-            border: 1.5px solid white;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-            user-select: none;
-            cursor: not-allowed;
-            z-index: 20;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
         .nav-controls {
             display: flex;
             gap: 15px;
@@ -127,7 +84,7 @@
         }
 
         .btn-nav {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255,255,255,0.2);
             color: white;
             border: none;
             padding: 8px 18px;
@@ -135,67 +92,35 @@
             cursor: pointer;
             font-weight: 600;
         }
-
-        .btn-nav:hover {
-            background: rgba(255, 255, 255, 0.35);
-        }
+        .btn-nav:hover { background: rgba(255,255,255,0.35); }
 
         /* Barra Inferior Fixa do Carrinho */
         .cart-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 0; left: 0; right: 0;
             background: #ffffff;
             color: #222;
             padding: 12px 20px;
-            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            z-index: 200;
         }
 
-        .cart-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-open-cart {
-            background: #4a2511;
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.85rem;
-        }
-
-        .btn-whatsapp {
-            background: #25d366;
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 25px;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 0.85rem;
-        }
+        .cart-actions { display: flex; gap: 8px; }
+        .btn-open-cart { background: #4a2511; color: white; border: none; padding: 10px 16px; border-radius: 25px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+        .btn-whatsapp { background: #25d366; color: white; border: none; padding: 10px 18px; border-radius: 25px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
 
         /* Modal do Carrinho */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 200;
+            z-index: 300;
             padding: 15px;
         }
 
@@ -209,7 +134,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         .modal-header {
@@ -221,19 +146,8 @@
             align-items: center;
         }
 
-        .btn-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .modal-body {
-            padding: 15px 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
+        .btn-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 15px 20px; overflow-y: auto; flex-grow: 1; }
 
         .cart-item {
             display: flex;
@@ -243,49 +157,30 @@
             border-bottom: 1px solid #eee;
         }
 
-        .item-title {
-            font-size: 0.88rem;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
+        .item-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }
+        .item-price { font-size: 0.8rem; color: #4a2511; font-weight: 600; }
 
-        .item-price {
-            font-size: 0.8rem;
-            color: #4a2511;
-            font-weight: 600;
-        }
-
-        .qty-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        /* Controles de Quantidade (+ e -) */
+        .qty-controls { display: flex; align-items: center; gap: 8px; }
         .btn-qty {
             background: #eee;
             border: none;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
-        }
-
-        .modal-footer {
-            padding: 16px 20px;
-            border-top: 1px solid #eee;
+            font-size: 18px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
         }
+        .btn-qty:active { background: #ddd; transform: scale(0.95); }
+        .btn-qty-remover { background: #ffebee; color: #c62828; }
 
-        .modal-total {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
+        .modal-total { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; }
 
         .toast {
             position: fixed;
@@ -295,14 +190,13 @@
             padding: 10px 22px;
             border-radius: 30px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
-            z-index: 300;
+            z-index: 400;
             font-size: 0.85rem;
         }
     </style>
 </head>
-
 <body>
     <header>
         📖 Arraste para folhear • Toque no <b>+</b> para pedir
@@ -320,7 +214,6 @@
         <button class="btn-nav" id="btn-prox">Próxima ▶</button>
     </div>
 
-    <!-- Barra Inferior -->
     <div class="cart-bar" id="cartBar" style="display: none;">
         <div>
             <b><span id="cartCount">0</span> itens</b> • <b style="color: #4a2511;" id="cartTotal">R$ 0,00</b>
@@ -331,7 +224,6 @@
         </div>
     </div>
 
-    <!-- Modal do Carrinho -->
     <div class="modal-overlay" id="modalCarrinho">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -351,65 +243,29 @@
         </div>
     </div>
 
-    <script type="module">
-        import { DADOS_CATALOGO_PADRAO } from './codigo/catalogo/DadosCatalogo.js';
-        import { clienteSupabase } from './codigo/repositorios/ConfiguracaoBanco.js';
-
+    <script>
+        const paginas = [{"numero": 1, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/1/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 2, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/2/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 3, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/3/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 4, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/4/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 5, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/5/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1004145", "nome": "CX CHOC LACREME LINGUA DE GATO 210GX16UN", "preco": 59.99, "x": 10.8, "y": 20.4, "w": 8.200000000000001, "h": 6.0}, {"id": "1004132", "nome": "CX CHOC LC LINGUA DE GATO RECH 70GX24UN", "preco": 22.29, "x": 11.4, "y": 50.1, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004038", "nome": "CHOC LINGUA DE GATO LC AO LEITE 70GX24UN", "preco": 22.29, "x": 84.5, "y": 48.699999999999996, "w": 7.8, "h": 5.7}, {"id": "1004133", "nome": "CX CHOC LC LINGUA DE GATO MEZZO 70GX24UN", "preco": 22.29, "x": 10.8, "y": 74.4, "w": 8.799999999999999, "h": 6.4}]}, {"numero": 6, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/6/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 1, "produtos": [{"id": "1004022", "nome": "CX BOMB CHOC CACAU LC SORTIDO 260GX10UN", "preco": 109.99, "x": 12.8, "y": 75.2, "w": 7.3999999999999995, "h": 5.4}]}, {"numero": 7, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/7/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1002628", "nome": "CX BOMB CHOC LC MINISHOW 108GX16UN", "preco": 42.49, "x": 14.799999999999999, "y": 34.0, "w": 8.4, "h": 6.2}, {"id": "1003102", "nome": "CX BOMB CHOC LC SORTIDO 108GX16UN", "preco": 42.49, "x": 59.199999999999996, "y": 34.699999999999996, "w": 8.6, "h": 6.3}, {"id": "1003981", "nome": "CX BOMB CHOC LC MINISHOW GIAND 108GX16UN", "preco": 42.49, "x": 15.1, "y": 76.7, "w": 8.0, "h": 5.8999999999999995}, {"id": "1003980", "nome": "CX BOMB CHOC LC MINISHOW PIST 108GX16UN", "preco": 42.49, "x": 60.9, "y": 77.7, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 8, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/8/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 13, "produtos": [{"id": "1004198", "nome": "TAB CHOC CACAU LACREME AO LEITE 9GX200UN", "preco": 2.49, "x": 35.3, "y": 15.5, "w": 6.6000000000000005, "h": 4.9}, {"id": "1004198", "nome": "TAB CHOC CACAU LACREME AO LEITE 9GX200UN", "preco": 2.49, "x": 22.900000000000002, "y": 22.1, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004199", "nome": "TAB CHOC BRANCO LACREME 9GX200UN", "preco": 2.49, "x": 34.699999999999996, "y": 26.5, "w": 7.000000000000001, "h": 5.2}, {"id": "1004199", "nome": "TAB CHOC BRANCO LACREME 9GX200UN", "preco": 2.49, "x": 22.400000000000002, "y": 33.300000000000004, "w": 5.8999999999999995, "h": 1.3}, {"id": "1002600", "nome": "TABLETE LACREME AO LEITE 20GX130UN", "preco": 5.29, "x": 8.7, "y": 36.5, "w": 7.199999999999999, "h": 5.3}, {"id": "1002636", "nome": "TABLETE LACREME BRANCO 20GX130UN", "preco": 5.29, "x": 22.400000000000002, "y": 36.6, "w": 7.6, "h": 5.5}, {"id": "1002742", "nome": "TABLETE LACREME MEZZO 20Gx130UN", "preco": 5.29, "x": 33.300000000000004, "y": 36.9, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002946", "nome": "TABLETE LACREME BRANCO 5GX150UN", "preco": 1.39, "x": 55.50000000000001, "y": 52.1, "w": 6.6000000000000005, "h": 4.9}, {"id": "1002947", "nome": "TABLETE LACREME 28% 5GX150UN", "preco": 1.39, "x": 86.1, "y": 52.1, "w": 6.6000000000000005, "h": 4.9}, {"id": "1002789", "nome": "TABLETE LACREME ZERO ACUCAR 100GX15UN", "preco": 26.49, "x": 38.4, "y": 78.9, "w": 7.3999999999999995, "h": 5.4}, {"id": "1003054", "nome": "TABLETE LACREME BRANCO ZA 100GX15UN", "preco": 26.49, "x": 60.3, "y": 79.4, "w": 7.199999999999999, "h": 5.3}, {"id": "1002820", "nome": "TABLETE LACREME ZERO LACTOSE 100GX15UN", "preco": 26.49, "x": 80.30000000000001, "y": 79.4, "w": 7.199999999999999, "h": 5.3}, {"id": "1002742", "nome": "TABLETE LACREME GIANDUIA 20Gx130UN", "preco": 5.29, "x": 45.0, "y": 36.6, "w": 7.3999999999999995, "h": 5.4}]}, {"numero": 9, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/9/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "1003774", "nome": "TABLETE LACREME DUO INTENSE 100GX38UN", "preco": 23.49, "x": 4.5, "y": 34.699999999999996, "w": 7.199999999999999, "h": 5.3}, {"id": "1003788", "nome": "TABLETE LACREME PISTACHE 100GX38UN", "preco": 23.49, "x": 36.4, "y": 34.9, "w": 7.199999999999999, "h": 5.3}, {"id": "1004264", "nome": "TAB CHOC CACAU RECH LC AO LEIT 130GX14UN", "preco": 26.49, "x": 65.7, "y": 35.0, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002638", "nome": "TABLETE LACREME AO LEITE 100GX38UN", "preco": 21.29, "x": 18.2, "y": 63.2, "w": 6.800000000000001, "h": 5.0}, {"id": "1002866", "nome": "TABLETE LACREME BRANCO 100GX38UN", "preco": 21.29, "x": 34.9, "y": 63.4, "w": 6.6000000000000005, "h": 4.9}, {"id": "1003107", "nome": "TABLETE LACREME MEZZO 100GX38UN", "preco": 21.29, "x": 51.800000000000004, "y": 63.5, "w": 6.800000000000001, "h": 5.0}, {"id": "1003637", "nome": "TABLETE LACREME GOLD 100GX38UN", "preco": 21.29, "x": 67.7, "y": 63.6, "w": 6.800000000000001, "h": 5.0}, {"id": "1003790", "nome": "TABLETE LACREME GIANDUIA 100GX38UN", "preco": 21.29, "x": 84.39999999999999, "y": 63.9, "w": 6.4, "h": 4.7}]}, {"numero": 10, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/10/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "1000624", "nome": "CX TRUFAS LACREME SORTIDAS 160GX12UN", "preco": 42.49, "x": 26.5, "y": 30.8, "w": 7.8, "h": 5.7}, {"id": "1001867", "nome": "SLACK LACREME AO LEITE 315GX12UN", "preco": 37.49, "x": 54.2, "y": 29.4, "w": 7.8, "h": 5.7}, {"id": "1003997", "nome": "SLACK LACREME GIANDUIA 315GX12UN", "preco": 37.49, "x": 80.9, "y": 29.099999999999998, "w": 7.8, "h": 5.7}, {"id": "1002193", "nome": "TRUFA LACREME AO LEITE 12,5GX150UN", "preco": 3.79, "x": 7.9, "y": 53.300000000000004, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002195", "nome": "TRUFA LACREME GIANDUIA 12,5GX150UN", "preco": 3.79, "x": 33.1, "y": 63.4, "w": 6.800000000000001, "h": 5.0}, {"id": "1002194", "nome": "TRUFA LACREME BRANCO 12,5GX150UN", "preco": 3.79, "x": 6.800000000000001, "y": 73.0, "w": 6.6000000000000005, "h": 4.9}, {"id": "1003990", "nome": "TRUFA LACREME PISTACHE 12,5GX150UN", "preco": 3.79, "x": 33.4, "y": 84.2, "w": 6.3, "h": 4.6}]}, {"numero": 11, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/11/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1001698", "nome": "COFRE LACREME KIDS 150GX12UN", "preco": 54.99, "x": 29.7, "y": 48.0, "w": 7.6, "h": 5.5}, {"id": "1003368", "nome": "CX LACREME KIDS 108GX16UN", "preco": 31.99, "x": 8.799999999999999, "y": 79.7, "w": 7.199999999999999, "h": 5.3}, {"id": "1002196", "nome": "TRUFA LC KIDS LEITE 12,5GX150UN", "preco": 3.79, "x": 58.699999999999996, "y": 48.199999999999996, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002635", "nome": "TABLETE LC KIDS RECH AO LEITE 18GX130UN", "preco": 5.29, "x": 77.4, "y": 49.8, "w": 8.200000000000001, "h": 6.0}, {"id": "1003698", "nome": "TABLETE LACREME KIDS 130GX14UN", "preco": 26.94, "x": 49.1, "y": 84.7, "w": 7.000000000000001, "h": 5.2}]}, {"numero": 12, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/12/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003766", "nome": "CX DINOSSAUROS DRAGEADOS 60GX12UN", "preco": 12.99, "x": 15.0, "y": 66.9, "w": 6.0, "h": 4.3999999999999995}, {"id": "2005461", "nome": "PELUCIA DINOSSAURO DUSTIN 3UN CH", "preco": 64.99, "x": 63.9, "y": 31.7, "w": 6.3, "h": 4.6}, {"id": "2005462", "nome": "PELUCIA DINOSSAURO DYLAN 3UN CH", "preco": 64.99, "x": 11.200000000000001, "y": 47.599999999999994, "w": 5.7, "h": 4.2}, {"id": "2005460", "nome": "PELUCIA DINOSSAURO DARLA 3UN CH", "preco": 64.99, "x": 40.6, "y": 60.3, "w": 6.3, "h": 4.6}]}, {"numero": 13, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/13/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "1003787", "nome": "BOMBONS CHOCOMONSTROS TATUAGENS 120G", "preco": 31.99, "x": 45.800000000000004, "y": 27.900000000000002, "w": 5.800000000000001, "h": 4.3}, {"id": "1003701", "nome": "TABLETE CHOCOMONSTROS 30GX60UN", "preco": 7.99, "x": 68.7, "y": 17.7, "w": 6.0, "h": 4.3999999999999995}, {"id": "1003807", "nome": "COPO CHOCOMONSTROS CLAUDETE 145GX6UN", "preco": 84.99, "x": 20.4, "y": 32.800000000000004, "w": 5.800000000000001, "h": 4.3}, {"id": "1003809", "nome": "COPO CHOCOMONSTROS LUDOVICO 145GX6UN", "preco": 84.99, "x": 35.5, "y": 39.1, "w": 5.800000000000001, "h": 4.3}, {"id": "1002783", "nome": "CUBO BELLAS 145GX24UN", "preco": 31.99, "x": 83.89999999999999, "y": 76.0, "w": 6.3, "h": 4.6}, {"id": "1002623", "nome": "CUBO CHOCOMONSTROS 145GX24UN", "preco": 31.99, "x": 59.099999999999994, "y": 72.3, "w": 5.800000000000001, "h": 4.3}, {"id": "1002646", "nome": "TABLETE CHOCOMONSTRONS 115G", "preco": 19.29, "x": 10.6, "y": 77.60000000000001, "w": 5.7, "h": 4.2}, {"id": "1003451", "nome": "DRAGEADO CHOCOMONSTRO 100GX16UN", "preco": 21.29, "x": 47.9, "y": 77.0, "w": 5.800000000000001, "h": 4.3}]}, {"numero": 14, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/14/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "2005649", "nome": "URSINHOS CARINHOSOS G MARROM 3UN", "preco": 109.99, "x": 20.200000000000003, "y": 36.6, "w": 6.6000000000000005, "h": 4.9}, {"id": "2005650", "nome": "PELUCIA URSINHOS CARINHOSOS G ROSA 3UN", "preco": 109.99, "x": 42.199999999999996, "y": 36.4, "w": 6.4, "h": 4.7}, {"id": "2005648", "nome": "PELUCIA URSINHOS CARINHOSOS G AZUL 3UN", "preco": 109.99, "x": 63.3, "y": 36.6, "w": 6.4, "h": 4.7}, {"id": "1004054", "nome": "CX DRAGE CHOC SURPRESA URSINHOS 50GX12UN", "preco": 21.29, "x": 6.2, "y": 64.5, "w": 6.800000000000001, "h": 5.0}, {"id": "2005943", "nome": "CANECA URSINHOS CARINHOSOS ROSA 12UN", "preco": 39.49, "x": 43.9, "y": 63.6, "w": 6.800000000000001, "h": 5.0}, {"id": "2005945", "nome": "CANECA URSINHOS CARINHOSOS AZUL 12UN", "preco": 39.49, "x": 62.5, "y": 65.2, "w": 6.4, "h": 4.7}, {"id": "2005944", "nome": "CANECA URSINHOS CARINHOSOS AMARELO 12UN", "preco": 39.49, "x": 81.89999999999999, "y": 68.10000000000001, "w": 6.3, "h": 4.6}]}, {"numero": 15, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/15/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1004231", "nome": "CX BOMB CHOC URSINHOS ROXO 135GX4UN", "preco": 99.99, "x": 50.1, "y": 41.699999999999996, "w": 6.3, "h": 4.6}, {"id": "1004232", "nome": "CX BOMB CHOC URSINHOS LARANJA 135GX4UN", "preco": 99.99, "x": 77.2, "y": 41.8, "w": 6.6000000000000005, "h": 4.9}, {"id": "1004224", "nome": "CX BOMB CHOC BELLAS COM TIARA 115GX10UN", "preco": 74.99, "x": 45.800000000000004, "y": 74.3, "w": 6.3, "h": 4.6}]}, {"numero": 16, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/16/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1004181", "nome": "MALETA C TRUFA CHOC PATR CHASE 108GX12UN", "preco": 74.99, "x": 15.2, "y": 43.6, "w": 7.8, "h": 5.7}, {"id": "1004170", "nome": "TRUFA CHOC COM MALETA PATR SKY 108GX12UN", "preco": 74.99, "x": 74.3, "y": 42.9, "w": 8.0, "h": 5.8999999999999995}]}, {"numero": 17, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/17/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1003448", "nome": "BISCOITO HARRY POTTER 100GX15UN", "preco": 16.99, "x": 32.0, "y": 54.2, "w": 8.0, "h": 5.8999999999999995}, {"id": "1003239", "nome": "TABLETE HP BRASAO HOGWARTS 54GX16UN", "preco": 16.99, "x": 75.2, "y": 86.6, "w": 8.4, "h": 6.2}, {"id": "1003374", "nome": "CX BRASAO HOGW HARRY POTTER 140GX12UN", "preco": 57.99, "x": 35.4, "y": 86.6, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 18, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/18/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1004072", "nome": "CX ESFERA CHOC MINIVERSO HP 47GX24UN", "preco": 23.49, "x": 61.3, "y": 34.699999999999996, "w": 8.200000000000001, "h": 6.0}, {"id": "1004200", "nome": "CX TAB CHOC CART HP HOGWARTS 100GX12UN", "preco": 79.99, "x": 16.6, "y": 72.1, "w": 7.8, "h": 5.7}]}, {"numero": 19, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/19/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1004243", "nome": "TAB CHOC PELUCIA LIVRO MONST HP 160GX8UN", "preco": 109.99, "x": 9.2, "y": 18.4, "w": 7.000000000000001, "h": 5.2}, {"id": "1004266", "nome": "BISCOITO HARRY POTTER AO LEITE 200GX10UN", "preco": 69.99, "x": 34.2, "y": 47.8, "w": 7.6, "h": 5.5}, {"id": "1004196", "nome": "LATA COM TRUFA CHOC BATMOVEL 108GX8UN", "preco": 74.99, "x": 7.000000000000001, "y": 67.80000000000001, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 20, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/20/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1004208", "nome": "LATA MINIPANETTONE CHOC MINNIE 100GX12UN", "preco": 54.99, "x": 39.1, "y": 22.400000000000002, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004207", "nome": "LATA MINIPANETTONE CHOC MICKEY 100GX12UN", "preco": 54.99, "x": 72.0, "y": 24.8, "w": 7.8, "h": 5.7}, {"id": "1004244", "nome": "COPO BOMB CHOC MICKEY 145GX10UN", "preco": 84.99, "x": 49.1, "y": 82.19999999999999, "w": 8.9, "h": 6.6000000000000005}, {"id": "1004242", "nome": "BOMB CHOC CALENDAR ADVEN MICKEY 210GX6UN", "preco": 159.99, "x": 36.4, "y": 41.0, "w": 8.0, "h": 5.8999999999999995}]}, {"numero": 21, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/21/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1004257", "nome": "PIPOCA COB CHOC TOY STORY BUZZ 45GX12UN", "preco": 74.99, "x": 72.7, "y": 41.699999999999996, "w": 8.9, "h": 6.6000000000000005}, {"id": "1004258", "nome": "PIPOCA COB CHOC TOY STORY WOODY 45GX12UN", "preco": 74.99, "x": 37.7, "y": 16.7, "w": 8.4, "h": 6.2}, {"id": "1004201", "nome": "CX BOMB CHOC PINCEIS PPG 115GX10UN", "preco": 89.99, "x": 5.4, "y": 73.8, "w": 8.6, "h": 6.3}]}, {"numero": 22, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/22/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "2006552", "nome": "SACOLA CHOCOMONSTROS ADAMASTOR 10UN CH", "preco": 31.99, "x": 78.5, "y": 80.80000000000001, "w": 8.799999999999999, "h": 6.4}, {"id": "2006552", "nome": "SACOLA CHOCOMONSTROS CLAUDETE 10UN CH", "preco": 31.99, "x": 32.9, "y": 80.10000000000001, "w": 8.799999999999999, "h": 6.4}]}, {"numero": 23, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/23/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "2006548", "nome": "PRESILHA CABELO MALUCO CLAUDETE 8UN CH", "preco": 16.99, "x": 18.4, "y": 28.9, "w": 7.8, "h": 5.7}, {"id": "2006549", "nome": "PRESILHA CABELO MALUCO LUDOVICO 7UN CH", "preco": 16.99, "x": 47.0, "y": 33.1, "w": 7.8, "h": 5.7}, {"id": "1004160", "nome": "TAB CHOC CACAU VILOES BATMAN CR 40GX20UN", "preco": 19.99, "x": 14.499999999999998, "y": 66.4, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 24, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/24/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 25, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/25/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003469", "nome": "PANETTONE GOTAS 450GX18UN", "preco": 49.99, "x": 70.6, "y": 27.0, "w": 8.200000000000001, "h": 6.0}, {"id": "1003469", "nome": "PANETTONE GOTAS 450GX18UN", "preco": 49.99, "x": 21.4, "y": 11.4, "w": 5.8999999999999995, "h": 1.3}, {"id": "1003189", "nome": "PANETTONE CHOCOLATE AO LEITE 420GX18UN", "preco": 64.99, "x": 71.39999999999999, "y": 88.1, "w": 8.799999999999999, "h": 6.4}, {"id": "1003470", "nome": "PANETTONE FRUTAS 450GX18UN", "preco": 42.49, "x": 41.4, "y": 59.099999999999994, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 26, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/26/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003470", "nome": "CANECA DE NATAL VERDE", "preco": 41.49, "x": 40.9, "y": 90.5, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "CANECA DE NATAL VERMELHA", "preco": 41.49, "x": 17.1, "y": 89.3, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "CHAVEIRO CHOCO MIGO DE NATAL", "preco": 31.99, "x": 86.1, "y": 52.800000000000004, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "VELA AROMATICÁ DE NATAL", "preco": 64.99, "x": 10.5, "y": 47.099999999999994, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 27, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/27/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1003470", "nome": "KIT PAPELARIA CHOCOLATE", "preco": 79.99, "x": 8.7, "y": 16.1, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "COPO TRÉMICO CHOCOLATE CAUDA", "preco": 94.99, "x": 48.4, "y": 42.1, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "COPO TÉRMICO DE CHOCOLATE", "preco": 104.99, "x": 78.60000000000001, "y": 40.400000000000006, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "PIN CHOCOMIGO", "preco": 15.99, "x": 34.0, "y": 74.5, "w": 8.200000000000001, "h": 6.0}, {"id": "1003470", "nome": "PIN CHOCOMIGO", "preco": 15.99, "x": 50.0, "y": 69.0, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 28, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/28/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1004234", "nome": "LATA TRUFINHAS CHOC NATAL 108GX12UN", "preco": 54.99, "x": 13.700000000000001, "y": 17.0, "w": 8.4, "h": 6.2}, {"id": "1003886", "nome": "CX BOMB CHOC FELIZ NATAL 88GX14UN", "preco": 39.49, "x": 46.800000000000004, "y": 49.4, "w": 8.9, "h": 6.6000000000000005}, {"id": "1002209", "nome": "DRAGE CHOC ARVORE DE NATAL 70GX24UN", "preco": 19.99, "x": 15.1, "y": 77.0, "w": 8.6, "h": 6.3}]}, {"numero": 29, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/29/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 1, "produtos": [{"id": "1004230", "nome": "LATA TRUFAS CHOC LUMINARIA 135GX10UN", "preco": 99.99, "x": 9.700000000000001, "y": 56.699999999999996, "w": 8.799999999999999, "h": 6.4}]}, {"numero": 30, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/30/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1002482", "nome": "PAPAI NOEL ART CACAU MAGIA 70GX24UN", "preco": 27.99, "x": 9.6, "y": 26.0, "w": 8.799999999999999, "h": 6.4}, {"id": "1001216", "nome": "TAB CHOC NATAL PAPAI NOEL 54GX36UN", "preco": 18.29, "x": 79.2, "y": 75.9, "w": 8.799999999999999, "h": 6.4}, {"id": "1004248", "nome": "CHOCOARTE NATAL HOHOHO 40GX24UN", "preco": 16.99, "x": 38.6, "y": 63.4, "w": 8.6, "h": 6.3}]}, {"numero": 31, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/31/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 10, "produtos": [{"id": "1004246", "nome": "MINI ENFEITE TRUF CHOC ARVORE 27GX24UN", "preco": 12.99, "x": 33.800000000000004, "y": 20.8, "w": 8.4, "h": 6.2}, {"id": "1004246", "nome": "MINI ENFEITE TRUF CHOC ARVORE 27GX24UN", "preco": 12.99, "x": 31.5, "y": 40.9, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004247", "nome": "MINI CUBO TRUF CHOC ENFEI NATAL 27GX24UN", "preco": 12.99, "x": 6.1, "y": 34.300000000000004, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004247", "nome": "MINI CUBO TRUF CHOC ENFEI NATAL 27GX24UN", "preco": 12.99, "x": 31.5, "y": 42.4, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004229", "nome": "MINI ENFEITE TRUFA CHOC ESTRELA 27GX24UN", "preco": 12.99, "x": 4.7, "y": 15.299999999999999, "w": 8.799999999999999, "h": 6.4}, {"id": "1004229", "nome": "MINI ENFEITE TRUFA CHOC ESTRELA 27GX24UN", "preco": 12.99, "x": 31.5, "y": 43.9, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004197", "nome": "CX BOMB CHOC ESTREL NATAL CARAM 106X24UN", "preco": 31.99, "x": 49.5, "y": 28.299999999999997, "w": 8.200000000000001, "h": 6.0}, {"id": "1004280", "nome": "CX BOMB CHOC BLESS NUTS 120GX9UN", "preco": 61.99, "x": 53.0, "y": 71.39999999999999, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004280", "nome": "CX BOMB CHOC BLESS NUTS 120GX9UN", "preco": 61.99, "x": 16.900000000000002, "y": 84.0, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004245", "nome": "BOMB CHOC BLESS ENFEITE ARVORE 27GX24UN", "preco": 13.99, "x": 12.2, "y": 64.2, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 32, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/32/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1004265", "nome": "CX BOMB CHOC COM GLOBO NATALINO 160GX6UN", "preco": 109.99, "x": 69.0, "y": 21.2, "w": 7.8, "h": 5.7}, {"id": "1004227", "nome": "BISCOITO WAFER COB MIL FOLHAS 120GX14UN", "preco": 37.49, "x": 5.8999999999999995, "y": 44.7, "w": 7.199999999999999, "h": 5.3}, {"id": "1004228", "nome": "DRAGE CHOC CROCANTE NUTS 150GX9UN", "preco": 54.99, "x": 80.4, "y": 48.199999999999996, "w": 7.199999999999999, "h": 5.3}, {"id": "1004302", "nome": "BISCOITO COB CHOC BEGE LATA NT 185GX4UN", "preco": 64.99, "x": 16.2, "y": 70.39999999999999, "w": 7.000000000000001, "h": 5.2}, {"id": "1004303", "nome": "BISCOITO COB CHOC ROSE LATA NT 185GX4UN", "preco": 64.99, "x": 49.0, "y": 70.39999999999999, "w": 7.199999999999999, "h": 5.3}]}, {"numero": 33, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/33/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "1004249", "nome": "DRAGE CHOC LICOR CEREJA NATAL 150GX9UN", "preco": 34.99, "x": 11.1, "y": 18.0, "w": 7.3999999999999995, "h": 5.4}, {"id": "1004300", "nome": "CX BOMB CHOC MS AVELA VERMEL NT 108GX8UN", "preco": 42.49, "x": 48.0, "y": 5.5, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004299", "nome": "CX BOMB CHOC MS AVELA DOURAD NT 108GX8UN", "preco": 42.49, "x": 84.0, "y": 16.5, "w": 7.6, "h": 5.5}, {"id": "1001957", "nome": "PEDACOS PANETTONES COBERTOS 200GX6UN", "preco": 54.99, "x": 4.8, "y": 47.9, "w": 7.3999999999999995, "h": 5.4}, {"id": "1003194", "nome": "CX BOMB CHOC SORT DE NATAL 40GX36UN", "preco": 11.99, "x": 43.7, "y": 50.1, "w": 7.6, "h": 5.5}, {"id": "1004292", "nome": "TRUFA CHOC CS PANETTONE 13,5GX150UN", "preco": 3.79, "x": 82.69999999999999, "y": 53.7, "w": 8.200000000000001, "h": 6.0}, {"id": "1004233", "nome": "CX BOMB CHOC SORTIDO NATAL 300GX6UN", "preco": 129.99, "x": 38.3, "y": 77.60000000000001, "w": 7.000000000000001, "h": 5.2}, {"id": "1003470", "nome": "BOMBONS ESTRELAS E ARVORES", "preco": 21.29, "x": 58.099999999999994, "y": 53.2, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 34, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/34/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003488", "nome": "PANETTONE BRIGADEIRO 580GX12UN", "preco": 99.99, "x": 44.2, "y": 13.0, "w": 7.3999999999999995, "h": 5.4}, {"id": "1003186", "nome": "PANETTONE MINI BRIGADEIRO 130GX18UN", "preco": 31.99, "x": 5.800000000000001, "y": 23.3, "w": 7.199999999999999, "h": 5.3}, {"id": "1001970", "nome": "PANETTONE TRUFADO MEZZO 580GX12UN", "preco": 99.99, "x": 53.900000000000006, "y": 41.9, "w": 7.000000000000001, "h": 5.2}, {"id": "1004217", "nome": "PANETTONE MILANES TRUFADO 620GX8UN", "preco": 84.99, "x": 43.9, "y": 75.8, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 35, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/35/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 1, "produtos": [{"id": "1000326", "nome": "PANETTONE CS TRUFADO GOTAS 750GX8UN", "preco": 139.99, "x": 28.1, "y": 20.3, "w": 7.199999999999999, "h": 5.3}]}, {"numero": 36, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/36/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1004213", "nome": "PANETTONE FRUTAS VERMELHAS 580GX12UN", "preco": 99.99, "x": 9.5, "y": 28.000000000000004, "w": 6.800000000000001, "h": 5.0}, {"id": "1004216", "nome": "PANETTONE DOCE LEITE BANANA 580GX12UN", "preco": 99.99, "x": 55.800000000000004, "y": 32.7, "w": 7.000000000000001, "h": 5.2}, {"id": "1004218", "nome": "PANETTONE TRUFADO FRUTAS 580GX12UN", "preco": 99.99, "x": 5.800000000000001, "y": 70.0, "w": 8.0, "h": 5.8999999999999995}, {"id": "1003862", "nome": "PANETTONE BROWNIE 500GX12UN", "preco": 99.99, "x": 54.1, "y": 74.1, "w": 7.3999999999999995, "h": 5.4}]}, {"numero": 37, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/37/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1004220", "nome": "CX BOMB CHOC DREAMS COLLECTION 200GX10UN", "preco": 99.99, "x": 75.3, "y": 31.900000000000002, "w": 7.6, "h": 5.5}, {"id": "1004220", "nome": "CX BOMB CHOC DREAMS COLLECTION 200GX10UN", "preco": 99.99, "x": 66.8, "y": 19.2, "w": 5.8999999999999995, "h": 1.3}, {"id": "1004151", "nome": "TRUFA CHOC BRANCO ART DREM SPEC 30GX90UN", "preco": 6.49, "x": 9.6, "y": 52.300000000000004, "w": 7.199999999999999, "h": 5.3}, {"id": "1003142", "nome": "TRUFA CHOC ART DREAMS PANETTONE 30GX90UN", "preco": 6.49, "x": 10.0, "y": 74.8, "w": 7.6, "h": 5.5}, {"id": "1003834", "nome": "CX BOMB CHOC CACAUMAGIA NATAL 156GX12UN", "preco": 64.99, "x": 45.6, "y": 62.4, "w": 7.6, "h": 5.5}]}, {"numero": 38, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/38/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1004222", "nome": "PANETTONE DREAMS SPECULOOS GOLD 750GX8UN", "preco": 139.99, "x": 30.599999999999998, "y": 29.7, "w": 6.3, "h": 4.6}, {"id": "1003796", "nome": "PANETTONE FONDUE MIL FOLHAS 900GX8UN", "preco": 149.99, "x": 68.8, "y": 72.39999999999999, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 39, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/39/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 1, "produtos": [{"id": "1004225", "nome": "PANETTONE DREAMS PIST FONDUE MF 900GX8UN", "preco": 159.99, "x": 14.799999999999999, "y": 37.8, "w": 6.4, "h": 4.7}]}, {"numero": 40, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/40/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1003489", "nome": "PANETTONE LACREME 650GX12UN", "preco": 109.99, "x": 82.8, "y": 21.6, "w": 8.4, "h": 6.2}, {"id": "1000668", "nome": "PANETTONE PREMIUM LACREME 750GX8UN", "preco": 149.99, "x": 85.8, "y": 65.4, "w": 8.4, "h": 6.2}]}, {"numero": 41, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/41/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1004221", "nome": "PANETTONE LINGUA DE GATO LC 1,4KGX6UN", "preco": 209.99, "x": 47.0, "y": 31.8, "w": 8.0, "h": 5.8999999999999995}, {"id": "1004226", "nome": "PANETTONE LACREME MEZZO ZA 650GX12UN", "preco": 109.99, "x": 47.199999999999996, "y": 49.5, "w": 8.200000000000001, "h": 6.0}, {"id": "1004255", "nome": "CX BOMB CHOC LACREME SORTIDO 260GX10UN", "preco": 109.99, "x": 45.300000000000004, "y": 72.3, "w": 8.4, "h": 6.2}]}, {"numero": 42, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/42/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1002913", "nome": "DRAGEADO BYTES PASSAS AO LEITE 100GX16UN", "preco": 19.29, "x": 14.099999999999998, "y": 32.5, "w": 8.0, "h": 5.8999999999999995}, {"id": "1002968", "nome": "DRAGEADO BYTES CROC AO LEITE 100GX16UN", "preco": 19.29, "x": 10.9, "y": 62.6, "w": 8.4, "h": 6.2}, {"id": "1003279", "nome": "DRAGEADO BYTES AMENDOIM 100GX16UN", "preco": 19.29, "x": 77.10000000000001, "y": 29.099999999999998, "w": 8.200000000000001, "h": 6.0}, {"id": "1002996", "nome": "DRAGEADO BYTES BRANCO CROC 100GX16UN", "preco": 19.29, "x": 72.39999999999999, "y": 56.39999999999999, "w": 8.4, "h": 6.2}]}, {"numero": 43, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/43/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1003040", "nome": "DRAGEADO BYTES AO LEITE BRANCO 100X16UN", "preco": 19.29, "x": 21.2, "y": 14.899999999999999, "w": 8.6, "h": 6.3}, {"id": "2000014", "nome": "WAFER BYTES AVELA 50GX30UN", "preco": 11.99, "x": 25.4, "y": 53.2, "w": 8.4, "h": 6.2}, {"id": "2000974", "nome": "WAFER SINTONIA CAJU E CANELA 45GX24UN", "preco": 11.99, "x": 30.7, "y": 83.8, "w": 8.4, "h": 6.2}, {"id": "1003099", "nome": "DRAGEADO BYTES 3 CHOCOLATES 100GX16UN", "preco": 19.29, "x": 70.6, "y": 13.5, "w": 8.200000000000001, "h": 6.0}, {"id": "1000024", "nome": "CX BYTES CRESPUS AO LEITE 100GX12UN", "preco": 18.29, "x": 68.7, "y": 49.5, "w": 8.0, "h": 5.8999999999999995}]}, {"numero": 44, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/44/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 45, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/45/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1003279", "nome": "DRAGEADO CROCANTE AO LEITE", "preco": 39.49, "x": 55.2, "y": 52.300000000000004, "w": 8.200000000000001, "h": 6.0}, {"id": "1003279", "nome": "BOMBON MINI SHOW AO LEITE 16UN", "preco": 42.49, "x": 21.5, "y": 25.8, "w": 8.200000000000001, "h": 6.0}, {"id": "1003279", "nome": "DRAGEADO CASTANHAS UVA PASSA", "preco": 47.99, "x": 14.7, "y": 72.6, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 46, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/46/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003725", "nome": "CAIXA BLESS BOMBONS DE AVELÃ", "preco": 64.99, "x": 45.0, "y": 29.099999999999998, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "BOMBON BLESS AO LEITE", "preco": 5.29, "x": 38.5, "y": 45.0, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "CUBO BOMBONS AVELÃ", "preco": 39.49, "x": 44.4, "y": 86.9, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "BOMBON BLESS AVELÃ", "preco": 5.29, "x": 58.199999999999996, "y": 51.5, "w": 6.800000000000001, "h": 5.0}]}, {"numero": 47, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/47/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1003725", "nome": "TABLETE BLESS AO LEITE", "preco": 6.99, "x": 53.900000000000006, "y": 78.10000000000001, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "TABLETE BLESS ZA CASTANHAS 20GX130UN", "preco": 6.99, "x": 75.5, "y": 78.60000000000001, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "TABLETE BLESS BRANCO20GX130UN", "preco": 6.99, "x": 54.800000000000004, "y": 47.699999999999996, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "TABLETE BLESS 70% CACAU 20GX130UN", "preco": 6.99, "x": 73.1, "y": 47.5, "w": 6.800000000000001, "h": 5.0}, {"id": "1003725", "nome": "TABLETE BLESS PISTACHE 20GX130UN", "preco": 7.99, "x": 54.6, "y": 22.400000000000002, "w": 6.800000000000001, "h": 5.0}]}, {"numero": 48, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/48/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1003298", "nome": "MIAU BLESS ZL AO LEITE 70GX24UN", "preco": 24.49, "x": 35.0, "y": 20.599999999999998, "w": 6.800000000000001, "h": 5.0}, {"id": "1003298", "nome": "MIAU BLESS ZL AO LEITE 70GX24UN", "preco": 23.49, "x": 22.2, "y": 13.4, "w": 5.8999999999999995, "h": 1.3}]}, {"numero": 49, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/49/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003298", "nome": "TRUFA BLESS BRANCA", "preco": 6.99, "x": 11.3, "y": 39.0, "w": 6.800000000000001, "h": 5.0}, {"id": "1003298", "nome": "TRUFA BLESS AO LEITE", "preco": 69.99, "x": 50.3, "y": 39.5, "w": 6.800000000000001, "h": 5.0}, {"id": "1003298", "nome": "TRUFA BLESS MORANGO", "preco": 6.99, "x": 10.7, "y": 69.39999999999999, "w": 6.800000000000001, "h": 5.0}, {"id": "1003298", "nome": "TRUFA BLESS PISTACHE", "preco": 7.99, "x": 50.0, "y": 69.0, "w": 6.800000000000001, "h": 5.0}]}, {"numero": 50, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/50/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1002642", "nome": "TRUFA LANUT AVELÃ 30GX90UN", "preco": 6.49, "x": 7.5, "y": 66.2, "w": 7.199999999999999, "h": 5.3}, {"id": "1003394", "nome": "TRUFA LANUT PISTACHE 30GX90UN", "preco": 6.49, "x": 48.3, "y": 65.2, "w": 6.800000000000001, "h": 5.0}, {"id": "1002642", "nome": "TRUFA LANUT AO LEITE 30GX90UN", "preco": 6.49, "x": 6.5, "y": 49.7, "w": 7.199999999999999, "h": 5.3}, {"id": "1002642", "nome": "TRUFA LANUT CHOCOLATEAO LEITE COM LICOR 30GX90UN", "preco": 6.49, "x": 5.3, "y": 81.2, "w": 7.199999999999999, "h": 5.3}, {"id": "1002642", "nome": "TRUFA LANUT CHOCOLATEAO LEITE COM LICOR 30GX90UN", "preco": 6.49, "x": 46.300000000000004, "y": 80.80000000000001, "w": 7.199999999999999, "h": 5.3}]}, {"numero": 51, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/51/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1002642", "nome": "TRUFA LANUT LIMÃO E TRUFAS VERMELHAS 30GX90UN", "preco": 6.49, "x": 12.5, "y": 81.10000000000001, "w": 7.199999999999999, "h": 5.3}, {"id": "1002642", "nome": "TRUFA LANUMIL FOLHAS AVELÃT  30GX90UN", "preco": 6.49, "x": 12.7, "y": 62.4, "w": 7.199999999999999, "h": 5.3}, {"id": "1002642", "nome": "TRUFA LANUMIL FOLHAS  30GX90UN", "preco": 6.49, "x": 12.9, "y": 46.2, "w": 7.199999999999999, "h": 5.3}]}, {"numero": 52, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/52/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003424", "nome": "TRUFA TORTA DE LIMAO 30GX90UN", "preco": 5.29, "x": 8.3, "y": 58.599999999999994, "w": 6.3, "h": 4.6}, {"id": "1002604", "nome": "TRUFA MORANGO 30GX90UN", "preco": 5.29, "x": 6.4, "y": 83.0, "w": 5.800000000000001, "h": 4.3}, {"id": "1002639", "nome": "TRUFA MARACUJA 30GX90UN", "preco": 5.29, "x": 80.30000000000001, "y": 83.2, "w": 6.0, "h": 4.3999999999999995}, {"id": "1003424", "nome": "TRUFA CHOCO AO LEITE SPECULLUS 30GX90UN", "preco": 5.29, "x": 82.1, "y": 59.0, "w": 6.3, "h": 4.6}]}, {"numero": 53, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/53/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "1002724", "nome": "TRUFA PACOCA 30GX90UN", "preco": 5.29, "x": 8.3, "y": 18.9, "w": 6.4, "h": 4.7}, {"id": "1003394", "nome": "TRUFA LANUT PISTACHE 30GX90UN", "preco": 6.49, "x": 81.3, "y": 18.3, "w": 6.800000000000001, "h": 5.0}, {"id": "1002633", "nome": "TRUFA TRADICIONAL 30GX90UN", "preco": 5.29, "x": 8.9, "y": 38.800000000000004, "w": 6.3, "h": 4.6}, {"id": "1002641", "nome": "TRUFA MENTA 30GX90UN", "preco": 5.29, "x": 8.7, "y": 62.1, "w": 7.000000000000001, "h": 5.2}, {"id": "1002622", "nome": "TRUFA COCO 30GX90UN", "preco": 5.29, "x": 7.9, "y": 83.2, "w": 6.800000000000001, "h": 5.0}, {"id": "1002634", "nome": "TRUFA BRANCO 30GX90UN", "preco": 5.29, "x": 82.1, "y": 62.3, "w": 7.000000000000001, "h": 5.2}, {"id": "1002616", "nome": "TRUFA MEZZO 30GX90UN", "preco": 5.29, "x": 82.5, "y": 84.3, "w": 6.4, "h": 4.7}, {"id": "1002633", "nome": "TRUFA TRADICIONAL 55% CACAU 30GX90UN", "preco": 5.29, "x": 82.0, "y": 39.300000000000004, "w": 6.3, "h": 4.6}]}, {"numero": 54, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/54/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 6, "produtos": [{"id": "1002193", "nome": "TRUFA LACREME AO LEITE 12,5GX150UN", "preco": 3.79, "x": 14.2, "y": 52.0, "w": 6.4, "h": 4.7}, {"id": "1002194", "nome": "TRUFA LACREME BRANCO 12,5GX150UN", "preco": 3.79, "x": 80.30000000000001, "y": 52.5, "w": 6.3, "h": 4.6}, {"id": "1002195", "nome": "TRUFA LACREME GIANDUIA 12,5GX150UN", "preco": 3.79, "x": 14.6, "y": 69.6, "w": 6.4, "h": 4.7}, {"id": "1002196", "nome": "TRUFA LC KIDS LEITE 12,5GX150UN", "preco": 3.79, "x": 79.10000000000001, "y": 69.6, "w": 6.800000000000001, "h": 5.0}, {"id": "1003990", "nome": "TRUFA LACREME PISTACHE 12,5GX150UN", "preco": 3.79, "x": 14.399999999999999, "y": 84.6, "w": 6.4, "h": 4.7}, {"id": "1002188", "nome": "TRUFA BENDITO CACAO 70% 12,5GX150UN", "preco": 3.79, "x": 80.9, "y": 84.6, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 55, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/55/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "1003059", "nome": "TAB BENDITO CACAO DARK MILK 5GX150UN", "preco": 1.39, "x": 43.3, "y": 58.099999999999994, "w": 7.000000000000001, "h": 5.2}, {"id": "1002946", "nome": "TABLETE LACREME BRANCO 5GX150UN", "preco": 1.39, "x": 64.7, "y": 58.599999999999994, "w": 7.000000000000001, "h": 5.2}, {"id": "1002947", "nome": "TABLETE LACREME 28% 5GX150UN", "preco": 1.39, "x": 86.2, "y": 58.099999999999994, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002964", "nome": "TABLETE CAFE 5GX150UN", "preco": 1.39, "x": 63.5, "y": 77.4, "w": 6.6000000000000005, "h": 4.9}, {"id": "1002962", "nome": "TABLETE MENTA 5GX150UN", "preco": 1.39, "x": 85.0, "y": 77.2, "w": 7.000000000000001, "h": 5.2}, {"id": "1002964", "nome": "TABLETE CHOCO 55% 5GX150UN", "preco": 1.39, "x": 41.9, "y": 77.3, "w": 6.6000000000000005, "h": 4.9}, {"id": "1002964", "nome": "TABLETE 70%5GX150UN", "preco": 1.39, "x": 20.4, "y": 77.7, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 56, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/56/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 10, "produtos": [{"id": "1002600", "nome": "TABLETE LACREME AO LEITE 20GX130UN", "preco": 5.29, "x": 38.800000000000004, "y": 21.0, "w": 6.0, "h": 4.3999999999999995}, {"id": "1002636", "nome": "TABLETE LACREME BRANCO 20GX130UN", "preco": 5.29, "x": 52.400000000000006, "y": 20.8, "w": 6.3, "h": 4.6}, {"id": "1002742", "nome": "TABLETE LACREME MEZZO 20Gx130UN", "preco": 5.29, "x": 66.2, "y": 20.9, "w": 6.4, "h": 4.7}, {"id": "1002635", "nome": "TABLETE LC KIDS RECH AO LEITE 18GX130UN", "preco": 5.29, "x": 48.0, "y": 52.0, "w": 6.4, "h": 4.7}, {"id": "1002620", "nome": "TABLETE BENDITO CACAO 55% 20GX130UN", "preco": 5.29, "x": 61.5, "y": 52.2, "w": 7.000000000000001, "h": 5.2}, {"id": "1002599", "nome": "TABLETE LARANJA 20GX130UN", "preco": 5.29, "x": 76.0, "y": 51.6, "w": 7.000000000000001, "h": 5.2}, {"id": "1002601", "nome": "TABLETE CASTANHA DE CAJU 20GX130UN", "preco": 5.29, "x": 89.4, "y": 51.7, "w": 7.199999999999999, "h": 5.3}, {"id": "1002609", "nome": "TABLETE PIMENTA 20GX130UN", "preco": 5.29, "x": 63.7, "y": 83.0, "w": 7.8, "h": 5.7}, {"id": "1002602", "nome": "TABLETE CROCANTE 18GX130UN", "preco": 5.29, "x": 89.60000000000001, "y": 82.8, "w": 7.6, "h": 5.5}, {"id": "1002742", "nome": "TABLETE LACREME GIANDUIA 20Gx130UN", "preco": 5.29, "x": 80.80000000000001, "y": 21.4, "w": 6.4, "h": 4.7}]}, {"numero": 57, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/57/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1003094", "nome": "TABLETE CS CASTANHA CARAMELIZADA 100GX44", "preco": 18.29, "x": 26.200000000000003, "y": 79.4, "w": 7.6, "h": 5.5}, {"id": "1003096", "nome": "TABLETE MORANGO AO LEITE 100GX44UN", "preco": 18.29, "x": 51.300000000000004, "y": 78.60000000000001, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002867", "nome": "TABLETE CS COOKIES'N CREAM 100GX44UN", "preco": 18.29, "x": 76.8, "y": 78.5, "w": 7.8, "h": 5.7}]}, {"numero": 58, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/58/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 59, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/59/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "1003829", "nome": "TABLETE 80% CACAU 30G", "preco": 12.99, "x": 9.6, "y": 30.3, "w": 6.800000000000001, "h": 5.0}, {"id": "1003059", "nome": "TAB BENDITO CACAO DARK MILK 5GX150UN", "preco": 1.39, "x": 70.1, "y": 59.9, "w": 6.800000000000001, "h": 5.0}, {"id": "1002188", "nome": "TRUFA BENDITO CACAO 70% 12,5GX150UN", "preco": 3.79, "x": 80.5, "y": 80.5, "w": 7.199999999999999, "h": 5.3}, {"id": "1003059", "nome": "TAB BENDITO CACAO 70% GX150UN", "preco": 1.39, "x": 47.599999999999994, "y": 60.199999999999996, "w": 6.800000000000001, "h": 5.0}, {"id": "1003059", "nome": "TAB BENDITO CACAO 85% 5GX150UN", "preco": 1.39, "x": 25.6, "y": 60.9, "w": 6.800000000000001, "h": 5.0}, {"id": "1003059", "nome": "TAB DEDO DE DEUS 5GX150UN", "preco": 1.39, "x": 10.100000000000001, "y": 83.39999999999999, "w": 6.800000000000001, "h": 5.0}, {"id": "1003829", "nome": "TABLETE 55% CACAU 30G", "preco": 12.99, "x": 52.1, "y": 30.5, "w": 6.800000000000001, "h": 5.0}, {"id": "1003829", "nome": "TABLETE 72% CACAU 30G", "preco": 12.99, "x": 32.6, "y": 30.4, "w": 6.800000000000001, "h": 5.0}]}, {"numero": 60, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/60/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003060", "nome": "TAB BENDITO CACAO DARK MILK 100GX38UN", "preco": 23.49, "x": 56.00000000000001, "y": 37.2, "w": 8.4, "h": 6.2}, {"id": "1002823", "nome": "TABLETE DEDO DE DEUS 67% 100GX15UN", "preco": 23.49, "x": 83.5, "y": 37.6, "w": 8.799999999999999, "h": 6.4}, {"id": "1003612", "nome": "TABLETE 72% CACAU 100G", "preco": 23.49, "x": 56.00000000000001, "y": 80.5, "w": 8.4, "h": 6.2}, {"id": "1003613", "nome": "TABLETE 86% CACAU 100G", "preco": 23.49, "x": 83.89999999999999, "y": 80.7, "w": 8.4, "h": 6.2}]}, {"numero": 61, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/61/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1002485", "nome": "CX BENDITO CACAO 170GX10UN", "preco": 64.99, "x": 16.6, "y": 34.9, "w": 8.799999999999999, "h": 6.4}, {"id": "1002627", "nome": "CX BOMB CHOC CACAU BC MINISHOW 108GX16UN", "preco": 42.49, "x": 43.8, "y": 82.8, "w": 7.6, "h": 5.5}]}, {"numero": 62, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/62/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "2005343", "nome": "GARRAFA LICOR DE CHOCOLATE CS 375MLX12UN", "preco": 109.99, "x": 81.0, "y": 29.099999999999998, "w": 7.6, "h": 5.5}, {"id": "2005343", "nome": "GARRAFA LICOR DE CHOCOLATE CS 375MLX12UN", "preco": 109.99, "x": 70.3, "y": 18.5, "w": 5.8999999999999995, "h": 1.3}]}, {"numero": 63, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/63/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1001474", "nome": "CX PRECIOSIDADES SORTIDO 360GX4UN", "preco": 74.99, "x": 13.5, "y": 44.0, "w": 7.3999999999999995, "h": 5.4}, {"id": "1002441", "nome": "DRAGEADO CLASSICOS DRINK LICOR 150GX9UN", "preco": 31.99, "x": 59.699999999999996, "y": 40.5, "w": 7.199999999999999, "h": 5.3}, {"id": "1002515", "nome": "CX CLASSICOS GARRAFINHAS 88GX18UN", "preco": 26.49, "x": 27.200000000000003, "y": 85.6, "w": 7.3999999999999995, "h": 5.4}]}, {"numero": 64, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/64/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 65, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/65/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1004025", "nome": "CX BOMB CHOC CACAU SORT CS M 160GX4UN", "preco": 89.99, "x": 15.6, "y": 15.8, "w": 6.4, "h": 4.7}, {"id": "1004024", "nome": "CX BOMB CHOC CACAU SORT CS G 300GX6UN", "preco": 129.99, "x": 59.699999999999996, "y": 37.0, "w": 6.4, "h": 4.7}, {"id": "1002203", "nome": "CHOCOARTE GRATIDAO 40GX24UN", "preco": 16.99, "x": 42.8, "y": 73.0, "w": 6.4, "h": 4.7}, {"id": "1000507", "nome": "TABLETE CHOC CACAU ARTE TE AMO 40GX24UN", "preco": 16.99, "x": 42.699999999999996, "y": 88.2, "w": 6.4, "h": 4.7}, {"id": "1000421", "nome": "CHOCOARTE PARABENS 40GX24UN", "preco": 16.99, "x": 74.8, "y": 73.3, "w": 6.3, "h": 4.6}]}, {"numero": 66, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/66/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003111", "nome": "CX BOMB CHOC CACAU CS SORTIDOS 240GX18UN", "preco": 74.99, "x": 13.900000000000002, "y": 24.7, "w": 6.4, "h": 4.7}, {"id": "1003994", "nome": "CX BOMB CHOC CUBO BRIGADEIRO 130GX24UN", "preco": 31.99, "x": 52.400000000000006, "y": 36.1, "w": 6.3, "h": 4.6}, {"id": "1002768", "nome": "CX BOMB CHOC CACAU CLASSIC SORT 120GX9UN", "preco": 39.49, "x": 14.7, "y": 71.1, "w": 5.5, "h": 4.0}, {"id": "1002770", "nome": "CX BOMB CHOC CACAU CLAS GIFT ST 160GX16U", "preco": 59.99, "x": 55.1, "y": 73.5, "w": 5.800000000000001, "h": 4.3}]}, {"numero": 67, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/67/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1004027", "nome": "FONDUE CHOC AO LEITE CS 250GX12UN", "preco": 59.99, "x": 16.6, "y": 26.5, "w": 6.6000000000000005, "h": 4.9}, {"id": "2002357", "nome": "PAO DE MEL DOCE DE LEITE 50GX28UN", "preco": 11.99, "x": 12.8, "y": 47.4, "w": 7.000000000000001, "h": 5.2}, {"id": "1003124", "nome": "CX TABLETES INTENSIDADE 350G", "preco": 129.99, "x": 9.6, "y": 78.10000000000001, "w": 6.3, "h": 4.6}, {"id": "1002495", "nome": "CX INTENSIDADE TABLETES 150GX12UN", "preco": 47.99, "x": 58.5, "y": 78.2, "w": 6.3, "h": 4.6}, {"id": "2002357", "nome": "PAO DE MEL S´MORES", "preco": 8.49, "x": 49.2, "y": 46.7, "w": 7.000000000000001, "h": 5.2}]}, {"numero": 68, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/68/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 69, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/69/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 2, "produtos": [{"id": "1004027", "nome": "CAIXA GOURMET", "preco": 149.99, "x": 39.7, "y": 32.800000000000004, "w": 8.799999999999999, "h": 6.4}, {"id": "1004027", "nome": "DRAGEADOS MIL FOLHA", "preco": 31.99, "x": 48.3, "y": 76.9, "w": 8.799999999999999, "h": 6.4}]}, {"numero": 70, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/70/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "1002880", "nome": "TAB DREAMS MIL FOLHAS 130GX14UN", "preco": 24.49, "x": 23.5, "y": 46.800000000000004, "w": 6.6000000000000005, "h": 4.9}, {"id": "1002881", "nome": "TAB DREAMS MIL FOLHAS AVELA 130GX14UN", "preco": 24.49, "x": 44.0, "y": 46.7, "w": 7.000000000000001, "h": 5.2}, {"id": "1003339", "nome": "TABLETE DREAMS CREME BRULEE 130GX14UN", "preco": 24.49, "x": 23.1, "y": 80.60000000000001, "w": 7.199999999999999, "h": 5.3}, {"id": "1002882", "nome": "TAB DREAMS TORTA DE MARACUJA 130GX14UN", "preco": 24.49, "x": 43.0, "y": 80.9, "w": 7.199999999999999, "h": 5.3}, {"id": "1003103", "nome": "TAB DREAMS TORTA DE MORANGO 130GX14UN", "preco": 24.49, "x": 63.7, "y": 80.60000000000001, "w": 7.8, "h": 5.7}, {"id": "1002881", "nome": "TAB DREAMS SPECULOUS 130GX14UN", "preco": 24.49, "x": 64.7, "y": 46.5, "w": 7.000000000000001, "h": 5.2}, {"id": "1002881", "nome": "TAB DREAMS PISTACHE 130GX14UN", "preco": 24.49, "x": 86.4, "y": 46.800000000000004, "w": 7.000000000000001, "h": 5.2}]}, {"numero": 71, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/71/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "1002762", "nome": "BB PETIT DELI OVAL MIL FOLHAS 78GX20UN", "preco": 21.29, "x": 29.099999999999998, "y": 67.30000000000001, "w": 7.6, "h": 5.5}, {"id": "1002792", "nome": "BB PETIT DELI BROWNIE 79GX20UN", "preco": 21.29, "x": 53.7, "y": 70.39999999999999, "w": 7.199999999999999, "h": 5.3}, {"id": "1001706", "nome": "BB PETIT DELI PISTACHE 78GX20UN", "preco": 21.29, "x": 80.7, "y": 72.39999999999999, "w": 7.6, "h": 5.5}, {"id": "1002762", "nome": "TAB TORTA DE MORANGO 50G", "preco": 13.99, "x": 16.8, "y": 18.2, "w": 7.6, "h": 5.5}, {"id": "1002762", "nome": "TAB TORTA DE MARACUJA 50G", "preco": 13.99, "x": 36.7, "y": 17.7, "w": 7.6, "h": 5.5}, {"id": "1002762", "nome": "TAB MIL FOLHAS 50G", "preco": 13.99, "x": 55.50000000000001, "y": 17.299999999999997, "w": 7.6, "h": 5.5}, {"id": "1002762", "nome": "TAB MIL FOLHAS AVELÃ 50G", "preco": 13.99, "x": 75.2, "y": 18.2, "w": 7.6, "h": 5.5}]}, {"numero": 72, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/72/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 73, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/73/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 74, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/74/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 75, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/75/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003719", "nome": "BISCOITO BISC RED FUNDO 85GX15UN", "preco": 15.99, "x": 9.8, "y": 19.7, "w": 7.8, "h": 5.7}, {"id": "1003090", "nome": "BISCOITO COBERTO AO LEITE 100GX15UN", "preco": 18.99, "x": 10.6, "y": 37.3, "w": 7.8, "h": 5.7}, {"id": "1003113", "nome": "BISCOITO CHOCO BISC COB CARAMEL 100GX15U", "preco": 18.99, "x": 10.2, "y": 53.800000000000004, "w": 7.8, "h": 5.7}, {"id": "1003682", "nome": "DRAGE CHOC BISCOITO SPECULOOS 100GX16U", "preco": 19.99, "x": 14.2, "y": 85.5, "w": 8.4, "h": 6.2}]}, {"numero": 76, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/76/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "1003344", "nome": "COOKIES BISC BAN 3 CHOCOLATES 140GX8UN", "preco": 26.29, "x": 33.6, "y": 22.5, "w": 7.8, "h": 5.7}, {"id": "1003343", "nome": "COOKIES BISC DEC LIMAO 140GX8UN", "preco": 26.29, "x": 35.099999999999994, "y": 41.4, "w": 7.6, "h": 5.5}, {"id": "1003118", "nome": "BISCOITO TRAD COBERTO AO LEITE 50GX36UN", "preco": 11.99, "x": 12.9, "y": 79.60000000000001, "w": 8.6, "h": 6.3}, {"id": "1003343", "nome": "COOKIES BISC TRAD AO LEITE 140GX8UN", "preco": 26.29, "x": 34.5, "y": 60.9, "w": 7.6, "h": 5.5}, {"id": "1003118", "nome": "BISCOITO TRAD COBERTO 50GX36UN", "preco": 11.99, "x": 64.1, "y": 79.10000000000001, "w": 8.6, "h": 6.3}]}, {"numero": 77, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/77/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 7, "produtos": [{"id": "1004001", "nome": "BISCOITO WAFER COB MIL FOLHAS 32GX24UN", "preco": 11.99, "x": 34.699999999999996, "y": 14.2, "w": 7.8, "h": 5.7}, {"id": "1004000", "nome": "BISCOITO WAFER COB AVELA 32GX24UN", "preco": 11.99, "x": 34.0, "y": 29.099999999999998, "w": 7.6, "h": 5.5}, {"id": "1003347", "nome": "BISCOITO WAFER COB AO LEITE 80GX14UN", "preco": 23.49, "x": 77.5, "y": 40.6, "w": 8.200000000000001, "h": 6.0}, {"id": "1001980", "nome": "BISCOITO WAFER MIL FOLHAS 80GX14UN", "preco": 18.29, "x": 39.7, "y": 61.4, "w": 7.8, "h": 5.7}, {"id": "1003082", "nome": "BISCOITO WAFER LANUT 80GX14UN", "preco": 18.29, "x": 79.5, "y": 60.5, "w": 8.0, "h": 5.8999999999999995}, {"id": "1003687", "nome": "BISCOITO WAFER CACAU AO LEITE 80GX14UN", "preco": 18.29, "x": 39.6, "y": 79.80000000000001, "w": 8.0, "h": 5.8999999999999995}, {"id": "1003183", "nome": "BISCOITO WAFER PISTACHE 80GX14UN", "preco": 18.29, "x": 79.10000000000001, "y": 80.10000000000001, "w": 7.8, "h": 5.7}]}, {"numero": 78, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/78/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1003636", "nome": "TABLETE LA NUT PISTACHE DUBAI 130GX14UN", "preco": 34.99, "x": 48.199999999999996, "y": 39.800000000000004, "w": 7.000000000000001, "h": 5.2}, {"id": "1000003", "nome": "DRAGEADO LANUT AVELA 150GX9UN", "preco": 31.99, "x": 50.0, "y": 72.39999999999999, "w": 7.8, "h": 5.7}, {"id": "1003639", "nome": "SLACK PISTACHE 290GX12UN", "preco": 69.99, "x": 83.0, "y": 72.1, "w": 8.0, "h": 5.8999999999999995}, {"id": "1001335", "nome": "CX MONTEBELLO MOUSSE MARACUJA 90GX12UN", "preco": 17.99, "x": 82.1, "y": 40.2, "w": 6.800000000000001, "h": 5.0}]}, {"numero": 79, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/79/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 3, "produtos": [{"id": "1000137", "nome": "CX MONTEBELLO TRADICIONAL 90GX12UN", "preco": 17.99, "x": 63.0, "y": 49.1, "w": 8.0, "h": 5.8999999999999995}, {"id": "1001113", "nome": "CX MONTEBELLO MOUSSE CHOCOLATE 90GX12UN", "preco": 17.99, "x": 63.4, "y": 84.39999999999999, "w": 8.200000000000001, "h": 6.0}, {"id": "1000137", "nome": "CX MONTEBELLO MARACUJA 90GX12UN", "preco": 17.99, "x": 25.6, "y": 66.8, "w": 8.0, "h": 5.8999999999999995}]}, {"numero": 80, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/80/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "1000191", "nome": "BB CEREJAO 23GX40UN", "preco": 8.49, "x": 11.3, "y": 38.1, "w": 7.000000000000001, "h": 5.2}, {"id": "1003334", "nome": "BOMBOM CHOC CACAU ANGEL FRU SIL 75GX14UN", "preco": 26.99, "x": 57.3, "y": 34.2, "w": 6.3, "h": 4.6}, {"id": "1002333", "nome": "DISPLAY BOTAO DE ROSA ANGEL 72UN", "preco": 21.29, "x": 33.2, "y": 58.4, "w": 6.6000000000000005, "h": 4.9}, {"id": "1003333", "nome": "BOMBOM CHOC CACAU ANGELGOURMET 200GX14UN", "preco": 66.99, "x": 9.9, "y": 82.5, "w": 6.4, "h": 4.7}]}, {"numero": 81, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/81/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 6, "produtos": [{"id": "1000137", "nome": "CX CUBO PRESENTE FELICIDADE", "preco": 1.59, "x": 82.69999999999999, "y": 46.7, "w": 8.0, "h": 5.8999999999999995}, {"id": "1000137", "nome": "CX CUBO PRESENTE FELIZ HOJE", "preco": 1.59, "x": 62.5, "y": 33.2, "w": 8.0, "h": 5.8999999999999995}, {"id": "1000137", "nome": "CX CUBO PRESENTE AMOR", "preco": 1.59, "x": 44.7, "y": 47.8, "w": 8.0, "h": 5.8999999999999995}, {"id": "1000137", "nome": "CARTÃO PRESENTE FELICIDADE", "preco": 2.99, "x": 14.6, "y": 75.2, "w": 8.0, "h": 5.8999999999999995}, {"id": "1000137", "nome": "CARTÃO PRESENTE AMOR", "preco": 2.99, "x": 49.6, "y": 89.0, "w": 8.0, "h": 5.8999999999999995}, {"id": "1000137", "nome": "CARTÃO PRESENTE CHOCOLATE", "preco": 2.99, "x": 84.3, "y": 84.6, "w": 8.0, "h": 5.8999999999999995}]}, {"numero": 82, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/82/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "2003421", "nome": "CAIXA DE TRUFAS COM ELASTICO P 50UN", "preco": 7.49, "x": 79.10000000000001, "y": 69.6, "w": 6.3, "h": 4.6}, {"id": "2003420", "nome": "CAIXA DE TRUFAS COM ELASTICO M 50UN", "preco": 9.99, "x": 76.8, "y": 41.3, "w": 5.800000000000001, "h": 4.3}, {"id": "2003419", "nome": "CAIXA DE TRUFAS COM ELASTICO G 50UN", "preco": 11.99, "x": 33.900000000000006, "y": 61.6, "w": 6.4, "h": 4.7}, {"id": "2003419", "nome": "SACOLA PRSENTE P", "preco": 3.79, "x": 34.8, "y": 36.1, "w": 6.4, "h": 4.7}, {"id": "2003419", "nome": "SACOLA PRSENTE G", "preco": 4.99, "x": 9.4, "y": 33.7, "w": 6.4, "h": 4.7}]}, {"numero": 83, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/83/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "2002832", "nome": "PELUCIA URSO MARROM G 2020 12UN CH", "preco": 109.99, "x": 13.3, "y": 37.2, "w": 5.800000000000001, "h": 4.3}, {"id": "2004616", "nome": "PELUCIA URSO LACO AZUL 15UN CH", "preco": 99.99, "x": 42.699999999999996, "y": 42.199999999999996, "w": 6.0, "h": 4.3999999999999995}, {"id": "2001204", "nome": "VACA LACREME 18UN CH", "preco": 99.99, "x": 12.5, "y": 77.60000000000001, "w": 6.0, "h": 4.3999999999999995}, {"id": "2002753", "nome": "PELUCIA GATO MIAU 2020 12UN CH", "preco": 64.99, "x": 45.1, "y": 77.9, "w": 6.3, "h": 4.6}, {"id": "2002819", "nome": "PELUCIA CACHORRO COM POTE 2020 18UN CH", "preco": 84.99, "x": 79.9, "y": 77.5, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 84, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/84/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "2001256", "nome": "CANECA LACREME CREMILDA 12UN OXF", "preco": 36.49, "x": 37.5, "y": 37.2, "w": 8.4, "h": 6.2}, {"id": "2004390", "nome": "CANECA JUMBO CREME LINHA 12UN", "preco": 48.99, "x": 51.2, "y": 60.0, "w": 8.799999999999999, "h": 6.4}, {"id": "2004389", "nome": "CANECA JUMBO MARROM LINHA 12UN", "preco": 48.99, "x": 16.900000000000002, "y": 59.099999999999994, "w": 7.6, "h": 5.5}, {"id": "2004382", "nome": "CANECA TULI MARROM FELIZ HOJE LINHA 12UN", "preco": 39.49, "x": 44.0, "y": 81.8, "w": 8.799999999999999, "h": 6.4}, {"id": "2004383", "nome": "CANECA TULIPA CREME FELIZ HOJE LINH 12UN", "preco": 39.49, "x": 10.100000000000001, "y": 75.0, "w": 8.200000000000001, "h": 6.0}]}, {"numero": 85, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/85/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 13, "produtos": [{"id": "2004381", "nome": "COPO TRIP TODO BENDITO DIA LINHA 12UN", "preco": 42.49, "x": 16.900000000000002, "y": 36.6, "w": 6.800000000000001, "h": 5.0}, {"id": "2000753", "nome": "CANECA CALDA CHOC AO LEITE", "preco": 36.99, "x": 76.1, "y": 6.4, "w": 5.7, "h": 4.2}, {"id": "2004446", "nome": "CANECA CALDA CAPUCCINO LINHA 12UN", "preco": 36.99, "x": 82.69999999999999, "y": 6.2, "w": 5.5, "h": 4.0}, {"id": "2004395", "nome": "CANECA CALDA CARAMELO LINHA 12UN", "preco": 36.99, "x": 69.39999999999999, "y": 6.1, "w": 5.800000000000001, "h": 4.3}, {"id": "2004393", "nome": "CANECA DROP MARROM LINHA 12UN", "preco": 24.49, "x": 69.89999999999999, "y": 30.3, "w": 7.000000000000001, "h": 5.2}, {"id": "2004394", "nome": "CANECA DROP CREME LINHA 12UN", "preco": 24.49, "x": 77.2, "y": 30.3, "w": 6.800000000000001, "h": 5.0}, {"id": "2004391", "nome": "CANECA FUSION VERDE LINHA 12UN", "preco": 41.49, "x": 7.000000000000001, "y": 53.7, "w": 7.199999999999999, "h": 5.3}, {"id": "2004392", "nome": "CANECA FUSION GOIABA LINHA 12UN", "preco": 41.49, "x": 36.0, "y": 56.8, "w": 8.0, "h": 5.8999999999999995}, {"id": "2004386", "nome": "CANECA RYO BRANCA LINHA 12UN", "preco": 36.99, "x": 79.7, "y": 50.1, "w": 7.000000000000001, "h": 5.2}, {"id": "2004384", "nome": "CANECA RYO MARROM LINHA 12UN", "preco": 36.99, "x": 71.8, "y": 49.9, "w": 7.6, "h": 5.5}, {"id": "2004385", "nome": "CANECA RYO LANUT LINHA 12UN", "preco": 39.49, "x": 9.700000000000001, "y": 81.5, "w": 8.200000000000001, "h": 6.0}, {"id": "2005925", "nome": "CANECA MIAU PRETO E BRANCO 2025 12UN", "preco": 32.99, "x": 47.4, "y": 78.5, "w": 8.4, "h": 6.2}, {"id": "2005924", "nome": "CANECA MIAU AMARELA 2025 12UN", "preco": 32.99, "x": 79.60000000000001, "y": 78.7, "w": 8.6, "h": 6.3}]}, {"numero": 86, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/86/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 4, "produtos": [{"id": "2005979", "nome": "BOLSA PUFFER CS SORT MARROM", "preco": 189.99, "x": 13.0, "y": 44.3, "w": 7.199999999999999, "h": 5.3}, {"id": "2005980", "nome": "BOLSA PUFFER CS SORT BRANCO", "preco": 189.99, "x": 28.1, "y": 48.5, "w": 7.199999999999999, "h": 5.3}, {"id": "2005909", "nome": "SHOULDER BAG CS", "preco": 109.99, "x": 77.3, "y": 63.9, "w": 6.3, "h": 4.6}, {"id": "2005911", "nome": "NECESSAIRE PUFFER CS", "preco": 79.99, "x": 57.199999999999996, "y": 84.6, "w": 6.6000000000000005, "h": 4.9}]}, {"numero": 87, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/87/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 5, "produtos": [{"id": "2005975", "nome": "GARRAFA TERMICA CHOCOLATE 15UN", "preco": 99.99, "x": 59.099999999999994, "y": 48.0, "w": 7.000000000000001, "h": 5.2}, {"id": "2006355", "nome": "GARRAFA TERM CHOCOLATE ROSA 5UN CH", "preco": 99.99, "x": 42.699999999999996, "y": 44.800000000000004, "w": 6.6000000000000005, "h": 4.9}, {"id": "2005976", "nome": "GARRAFA TERMICA CHOCOLATE 15UN", "preco": 99.99, "x": 75.3, "y": 44.6, "w": 7.3999999999999995, "h": 5.4}, {"id": "2006351", "nome": "COPO CALDA CS 12UN CH", "preco": 84.99, "x": 72.2, "y": 86.2, "w": 7.000000000000001, "h": 5.2}, {"id": "2005914", "nome": "COPO CHOCOLATE CS", "preco": 69.99, "x": 11.600000000000001, "y": 79.60000000000001, "w": 7.199999999999999, "h": 5.3}]}, {"numero": 88, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/88/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 8, "produtos": [{"id": "2005907", "nome": "CHAVEIRO PREMIUM CS", "preco": 34.99, "x": 8.1, "y": 18.5, "w": 8.4, "h": 6.2}, {"id": "2005936", "nome": "CHAVEIRO LOVERS CS", "preco": 16.99, "x": 5.0, "y": 59.599999999999994, "w": 8.6, "h": 6.3}, {"id": "2005940", "nome": "CHAVEIRO TRUFA CS", "preco": 16.99, "x": 7.6, "y": 47.3, "w": 8.200000000000001, "h": 6.0}, {"id": "2005938", "nome": "CHAVEIRO PICOLE CS", "preco": 16.99, "x": 38.2, "y": 61.7, "w": 9.2, "h": 6.7}, {"id": "2005981", "nome": "CHAVEIRO MORANGO CS", "preco": 16.99, "x": 37.0, "y": 46.9, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005939", "nome": "CHAVEIRO TABLETE CS", "preco": 16.99, "x": 5.2, "y": 76.0, "w": 8.799999999999999, "h": 6.4}, {"id": "2005935", "nome": "CHAVEIRO FONDUE CS", "preco": 16.99, "x": 30.7, "y": 78.10000000000001, "w": 8.4, "h": 6.2}, {"id": "2005937", "nome": "CHAVEIRO MONTEBELLO CS", "preco": 16.99, "x": 66.10000000000001, "y": 81.8, "w": 9.4, "h": 6.9}]}, {"numero": 89, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/89/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 9, "produtos": [{"id": "2005929", "nome": "PIN SORTIDO LOVERS CS", "preco": 11.99, "x": 87.3, "y": 26.5, "w": 9.2, "h": 6.7}, {"id": "2005934", "nome": "PIN SORTIDO TRUFA CS", "preco": 11.99, "x": 75.3, "y": 42.699999999999996, "w": 7.8, "h": 5.7}, {"id": "2005932", "nome": "PIN SORTIDO PICOLE CS", "preco": 11.99, "x": 40.0, "y": 44.1, "w": 8.4, "h": 6.2}, {"id": "2005931", "nome": "PIN SORTIDO MORANGO", "preco": 11.99, "x": 42.699999999999996, "y": 14.099999999999998, "w": 8.4, "h": 6.2}, {"id": "2005933", "nome": "PIN SORTIDO TABLETE CS", "preco": 11.99, "x": 68.89999999999999, "y": 57.199999999999996, "w": 8.799999999999999, "h": 6.4}, {"id": "2005928", "nome": "PIN SORTIDO FONDUE CS", "preco": 11.99, "x": 59.099999999999994, "y": 28.000000000000004, "w": 8.200000000000001, "h": 6.0}, {"id": "2005930", "nome": "PIN SORTIDO MONTEBELLO CS", "preco": 11.99, "x": 39.1, "y": 32.0, "w": 7.8, "h": 5.7}, {"id": "2005985", "nome": "KIT PIN SORT CHOCOLATE", "preco": 21.99, "x": 53.2, "y": 80.30000000000001, "w": 8.9, "h": 6.6000000000000005}, {"id": "2005986", "nome": "KIT PIN SORT FONDUE", "preco": 21.99, "x": 7.6, "y": 80.30000000000001, "w": 9.4, "h": 6.9}]}, {"numero": 90, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/90/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 12, "produtos": [{"id": "2005547", "nome": "CAMINHO DE MESA BC OFFWHITE 5UN CH", "preco": 94.99, "x": 49.9, "y": 20.200000000000003, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005568", "nome": "CAMINHO DE MESA BC VERDE 5UN CH", "preco": 94.99, "x": 86.0, "y": 21.3, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005548", "nome": "CAMINHO DE MESA BC TERRACOTA 5UN CH", "preco": 94.99, "x": 65.2, "y": 26.700000000000003, "w": 7.8, "h": 5.7}, {"id": "2005562", "nome": "LUGAR AMERICANO BC OFFWHITE 4UN CH", "preco": 44.99, "x": 42.1, "y": 53.7, "w": 7.8, "h": 5.7}, {"id": "2005564", "nome": "LUGAR AMERICANO BC VERDE 4UN", "preco": 44.99, "x": 4.3999999999999995, "y": 30.2, "w": 7.000000000000001, "h": 5.2}, {"id": "2005563", "nome": "LUGAR AMERICANO BC TERRACOTA 4UN CH", "preco": 44.99, "x": 11.799999999999999, "y": 56.2, "w": 7.199999999999999, "h": 5.3}, {"id": "2005566", "nome": "KIT 2 GUARDANAPOS BC OFFWHITE 4UN CH", "preco": 54.99, "x": 19.900000000000002, "y": 75.4, "w": 6.800000000000001, "h": 5.0}, {"id": "2005569", "nome": "KIT 2 GUARDANAPOS BC VERDE 4UN CH", "preco": 54.99, "x": 31.0, "y": 75.3, "w": 7.199999999999999, "h": 5.3}, {"id": "2005567", "nome": "KIT 2 GUARDANAPOS BC TERRACOTA 4UN CH", "preco": 54.99, "x": 42.0, "y": 74.8, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005549", "nome": "KIT 4 PORTA COPOS BC OFFWHITE 5UN CH", "preco": 34.99, "x": 52.7, "y": 63.0, "w": 7.6, "h": 5.5}, {"id": "2005552", "nome": "KIT 4 PORTA COPOS BC VERDE 5UN CH", "preco": 34.99, "x": 62.7, "y": 62.6, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005551", "nome": "KIT 4 PORTA COPOS BC TERRACOTA 5UN CH", "preco": 34.99, "x": 72.6, "y": 63.2, "w": 7.3999999999999995, "h": 5.4}]}, {"numero": 91, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/91/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 9, "produtos": [{"id": "2005554", "nome": "LUVA E DESCANSO DE PANELA BC OW 5UN CH", "preco": 59.99, "x": 88.7, "y": 19.900000000000002, "w": 8.200000000000001, "h": 6.0}, {"id": "2005558", "nome": "LUVA E DESCANSO DE PANELA BC V 5UN CH", "preco": 59.99, "x": 71.39999999999999, "y": 3.5999999999999996, "w": 8.0, "h": 5.8999999999999995}, {"id": "2005557", "nome": "LUVA E DESCANSO DE PANELA BC T 5UN CH", "preco": 59.99, "x": 49.4, "y": 17.1, "w": 7.8, "h": 5.7}, {"id": "2005559", "nome": "KIT UTENSILIOS BC OFFWHITE 4UN CH", "preco": 64.99, "x": 67.2, "y": 56.2, "w": 6.800000000000001, "h": 5.0}, {"id": "2005561", "nome": "KIT UTENSILIOS BC VERDE 4UN CH", "preco": 64.99, "x": 54.50000000000001, "y": 56.3, "w": 6.800000000000001, "h": 5.0}, {"id": "2005560", "nome": "KIT UTENSILIOS BC TERRACOTA 4UN CH", "preco": 64.99, "x": 60.9, "y": 56.10000000000001, "w": 6.6000000000000005, "h": 4.9}, {"id": "2005553", "nome": "ESPATULA BENDITO CACAO OFFWHITE 6UN CH", "preco": 39.99, "x": 18.099999999999998, "y": 47.0, "w": 8.200000000000001, "h": 6.0}, {"id": "2005570", "nome": "ESPATULA BENDITO CACAO VERDE 6UN CH", "preco": 39.99, "x": 30.099999999999998, "y": 47.0, "w": 8.200000000000001, "h": 6.0}, {"id": "2005571", "nome": "ESPATULA BENDITO CACAO TERRACOTA 6UN CH", "preco": 39.99, "x": 41.4, "y": 47.4, "w": 7.8, "h": 5.7}]}, {"numero": 92, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/92/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 93, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/93/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 94, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/94/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 1, "produtos": [{"id": "2000004", "nome": "LIVRO BEAN TO HEART 6UNI", "preco": 139.99, "x": 74.9, "y": 32.6, "w": 6.3, "h": 4.6}]}, {"numero": 95, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/95/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 96, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/96/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 97, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/97/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 98, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/98/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 99, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/99/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}, {"numero": 100, "imagem": "https://cdn.ipaper.io/iPaper/Papers/901540a9-1b8a-4580-a9e0-94cccfd0284c/Pages/100/Normal.jpg?token=XDCEvn1OBsqgfSICFKtitIFG7Poa84-6R0fP4IjboN0&token_path=%2fiPaper%2fPapers%2f901540a9-1b8a-4580-a9e0-94cccfd0284c%2fPages%2f&expires=1792650400", "qtd_produtos": 0, "produtos": []}];
+        const WHATSAPP = "5541984051401";
         const cart = {};
         let pageFlip = null;
-        let whatsappVendedor = "5541984051401";
 
-        async function inicializarCatalogo() {
-            let paginasParaExibir = [];
-
-            // 1. Tenta buscar a revista personalizada publicada pelo vendedor no Supabase
-            try {
-                const { data } = await clienteSupabase
-                    .from('catalogo_publico')
-                    .select('*')
-                    .eq('id', 'principal')
-                    .single();
-
-                if (data && data.paginas && data.paginas.length > 0) {
-                    whatsappVendedor = data.whatsapp || whatsappVendedor;
-                    // Filtra apenas as páginas ativas que o vendedor selecionou
-                    paginasParaExibir = data.paginas.filter(p => p.ativa !== false);
-                }
-            } catch (e) {
-                console.log("Usando catálogo padrão offline.");
-            }
-
-            // Fallback se ainda não publicou nenhuma revista
-            if (paginasParaExibir.length === 0) {
-                paginasParaExibir = DADOS_CATALOGO_PADRAO.paginas;
-            }
-
+        function montarRevista() {
             const bookEl = document.getElementById('flipbook');
-
-            bookEl.innerHTML = paginasParaExibir.map(p => `
+            bookEl.innerHTML = paginas.map(p => `
                 <div class="page">
                     <img class="bg-page" src="${p.imagem}" alt="Página ${p.numero}">
-                    ${p.produtos.map(prod => {
-                if (prod.esgotado) {
-                    return `
-                                <div class="hotspot-esgotado" style="left: ${prod.x}%; top: ${prod.y}%;">
-                                    Esgotado
-                                </div>
-                            `;
-                } else {
-                    return `
-                                <div class="hotspot-prod" 
-                                     id="hotspot-${prod.id}"
-                                     style="left: ${prod.x}%; top: ${prod.y}%;"
-                                     data-id="${prod.id}"
-                                     data-nome="${prod.nome}"
-                                     data-preco="${prod.preco}">
-                                    +
-                                    <span class="hotspot-badge" id="badge-${prod.id}">0</span>
-                                </div>
-                            `;
-                }
-            }).join('')}
+                    ${p.produtos.map(prod => `
+                        <div class="hotspot-prod" 
+                             id="hotspot-${prod.id}"
+                             style="left: ${prod.x}%; top: ${prod.y}%;"
+                             onpointerdown="event.stopPropagation()"
+                             onmousedown="event.stopPropagation()"
+                             ontouchstart="event.stopPropagation()"
+                             onclick="adicionarItem(event, '${prod.id}', '${prod.nome.replace(/'/g, "")}', ${prod.preco})">
+                            +
+                            <span class="hotspot-badge" id="badge-${prod.id}">0</span>
+                        </div>
+                    `).join('')}
                 </div>
             `).join('');
 
@@ -432,38 +288,57 @@
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
 
             pageFlip.on('flip', (e) => {
-                document.getElementById('pageInfo').innerText = `Página ${e.data + 1} de ${paginasParaExibir.length}`;
+                document.getElementById('pageInfo').innerText = `Página ${e.data + 1} de ${paginas.length}`;
             });
 
-            document.querySelectorAll('.hotspot-prod').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const id = btn.getAttribute('data-id');
-                    const nome = btn.getAttribute('data-nome');
-                    const preco = Number(btn.getAttribute('data-preco'));
-                    adicionarItem(id, nome, preco);
-                });
-            });
-
-            document.getElementById('btn-ant')?.addEventListener('click', () => pageFlip.flipPrev());
-            document.getElementById('btn-prox')?.addEventListener('click', () => pageFlip.flipNext());
-            document.getElementById('btn-ver-carrinho')?.addEventListener('click', abrirModalCarrinho);
-            document.getElementById('btn-fechar-modal')?.addEventListener('click', fecharModalCarrinho);
-            document.getElementById('btn-pedir-whats')?.addEventListener('click', enviarWhatsApp);
-            document.getElementById('btn-finalizar-whats-modal')?.addEventListener('click', enviarWhatsApp);
+            document.getElementById('btn-ant').onclick = () => pageFlip.flipPrev();
+            document.getElementById('btn-prox').onclick = () => pageFlip.flipNext();
+            document.getElementById('btn-ver-carrinho').onclick = abrirModalCarrinho;
+            document.getElementById('btn-fechar-modal').onclick = fecharModalCarrinho;
+            document.getElementById('btn-pedir-whats').onclick = enviarWhatsApp;
+            document.getElementById('btn-finalizar-whats-modal').onclick = enviarWhatsApp;
         }
 
-        function adicionarItem(id, nome, preco) {
+        // Adiciona item impedindo propagação para a folha
+        function adicionarItem(e, id, nome, preco) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+
             if (!cart[id]) {
                 cart[id] = { id, nome, preco, qtd: 0 };
             }
             cart[id].qtd += 1;
             atualizarCarrinho();
+            atualizarBadge(id);
 
             const toast = document.getElementById('toast');
             toast.innerText = `+1 ${nome} adicionado!`;
             toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 1500);
+            setTimeout(() => toast.style.display = 'none', 1400);
+        }
+
+        // Modifica quantidade (+1 ou -1) ou remove completamente se chegar a 0
+        function alterarQtd(id, delta) {
+            if (cart[id]) {
+                cart[id].qtd += delta;
+                if (cart[id].qtd <= 0) {
+                    delete cart[id];
+                }
+                atualizarCarrinho();
+                atualizarBadge(id);
+                renderizarCarrinhoModal();
+            }
+        }
+
+        function atualizarBadge(id) {
+            const badge = document.getElementById(`badge-${id}`);
+            if (badge) {
+                const qtd = cart[id] ? cart[id].qtd : 0;
+                badge.innerText = qtd;
+                badge.style.display = qtd > 0 ? 'block' : 'none';
+            }
         }
 
         function atualizarCarrinho() {
@@ -472,12 +347,6 @@
             for (let id in cart) {
                 count += cart[id].qtd;
                 total += cart[id].preco * cart[id].qtd;
-
-                const badge = document.getElementById(`badge-${id}`);
-                if (badge) {
-                    badge.innerText = cart[id].qtd;
-                    badge.style.display = cart[id].qtd > 0 ? 'block' : 'none';
-                }
             }
             document.getElementById('cartCount').innerText = count;
             document.getElementById('cartTotal').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
@@ -485,30 +354,7 @@
         }
 
         function abrirModalCarrinho() {
-            const listEl = document.getElementById('cartList');
-            const items = Object.values(cart).filter(i => i.qtd > 0);
-            if (items.length === 0) {
-                listEl.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">Seu carrinho está vazio.</p>';
-                document.getElementById('modalTotalValue').innerText = 'R$ 0,00';
-            } else {
-                let total = 0;
-                listEl.innerHTML = items.map(item => {
-                    const sub = item.preco * item.qtd;
-                    total += sub;
-                    return `
-                        <div class="cart-item">
-                            <div>
-                                <div class="item-title">${item.nome}</div>
-                                <div class="item-price">R$ ${item.preco.toFixed(2).replace('.', ',')} un</div>
-                            </div>
-                            <div class="qty-controls">
-                                <span><b>${item.qtd}x</b></span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                document.getElementById('modalTotalValue').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
-            }
+            renderizarCarrinhoModal();
             document.getElementById('modalCarrinho').style.display = 'flex';
         }
 
@@ -516,23 +362,59 @@
             document.getElementById('modalCarrinho').style.display = 'none';
         }
 
-        function enviarWhatsApp() {
-            let msg = "*Olá! Gostaria de fazer um pedido pelo Catálogo Cacau Show:*\\n\\n";
+        // Renderiza lista no modal com botões - e + para remover ou acrescentar
+        function renderizarCarrinhoModal() {
+            const listEl = document.getElementById('cartList');
+            const items = Object.values(cart);
+            if (items.length === 0) {
+                listEl.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">Seu carrinho está vazio.</p>';
+                document.getElementById('modalTotalValue').innerText = 'R$ 0,00';
+                document.getElementById('cartBar').style.display = 'none';
+                return;
+            }
+
             let total = 0;
+            listEl.innerHTML = items.map(item => {
+                const sub = item.preco * item.qtd;
+                total += sub;
+                return `
+                    <div class="cart-item">
+                        <div style="flex: 1; padding-right: 10px;">
+                            <div class="item-title">${item.nome}</div>
+                            <div class="item-price">R$ ${item.preco.toFixed(2).replace('.', ',')} un</div>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="btn-qty btn-qty-remover" onclick="alterarQtd('${item.id}', -1)" title="Diminuir ou remover">-</button>
+                            <b style="min-width: 20px; text-align: center;">${item.qtd}</b>
+                            <button class="btn-qty" onclick="alterarQtd('${item.id}', 1)" title="Aumentar">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('modalTotalValue').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }
+
+        // Envia mensagem limpa com quebras de linha reais no WhatsApp
+        function enviarWhatsApp() {
+            const ENTER = String.fromCharCode(10); // Quebra de linha universal
+            let msg = "*Olá! Gostaria de fazer o pedido pelo catálogo:*" + ENTER + ENTER;
+            let total = 0;
+
             for (let id in cart) {
                 if (cart[id].qtd > 0) {
                     const sub = cart[id].preco * cart[id].qtd;
-                    msg += "• " + cart[id].qtd + "x " + cart[id].nome + " - R$ " + sub.toFixed(2).replace('.', ',') + "\\n";
+                    msg += "• " + cart[id].qtd + "x " + cart[id].nome + " - R$ " + sub.toFixed(2).replace('.', ',') + ENTER;
                     total += sub;
                 }
             }
-            msg += "\\n*Total do Pedido: R$ " + total.toFixed(2).replace('.', ',') + "*";
-            const link = "https://wa.me/" + whatsappVendedor + "?text=" + encodeURIComponent(msg);
+
+            msg += ENTER + "*Total do Pedido: R$ " + total.toFixed(2).replace('.', ',') + "*";
+            const link = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
             window.open(link, '_blank');
         }
 
-        window.onload = inicializarCatalogo;
+        window.onload = montarRevista;
     </script>
 </body>
-
 </html>
