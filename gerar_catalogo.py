@@ -4,11 +4,11 @@ import requests
 
 # URL do Ciclo Oficial da Cacau Show
 CATALOGO_URL = "https://catalogo.cacaushow.com.br/2026/catalogo/ciclo-13-e-14/catalogo-vd-ciclos-13-e-14/?page=2"
-WHATSAPP_VENDEDOR = "5541984051401" # Seu WhatsApp para receber os pedidos
+WHATSAPP_VENDEDOR = "5541984051401"
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
-print("[*] Baixando catálogo oficial da Cacau Show...")
+print("[*] Conectando ao catálogo oficial da Cacau Show...")
 resp = requests.get(CATALOGO_URL, headers=headers)
 if resp.status_code != 200:
     print(f"[!] Erro ao acessar: {resp.status_code}")
@@ -27,7 +27,7 @@ chunks = settings.get("enrichments", {}).get("chunkUrls", {})
 
 produtos_por_pagina = {p: [] for p in range(1, total_paginas + 1)}
 
-print(f"[*] Carregando produtos interativos de {total_paginas} páginas...")
+print(f"[*] Mapeando produtos interativos de {total_paginas} páginas...")
 for chunk_key, chunk_url in chunks.items():
     try:
         c_resp = requests.get(chunk_url, headers=headers)
@@ -102,14 +102,15 @@ html_conteudo = f"""<!DOCTYPE html>
             object-fit: cover;
         }}
 
+        /* Botão do Produto com proteção contra arrasto */
         .hotspot-prod {{
             position: absolute;
             background: #25d366;
             color: #fff;
             border: 2px solid #fff;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -118,9 +119,10 @@ html_conteudo = f"""<!DOCTYPE html>
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transform: translate(-50%, -50%);
-            transition: transform 0.2s;
-            z-index: 25;
+            transition: transform 0.2s, background 0.2s;
+            z-index: 100; /* Fica acima da camada de virada de página */
             user-select: none;
+            touch-action: manipulation;
         }}
         .hotspot-prod:active {{
             transform: translate(-50%, -50%) scale(1.2);
@@ -156,7 +158,9 @@ html_conteudo = f"""<!DOCTYPE html>
             cursor: pointer;
             font-weight: 600;
         }}
+        .btn-nav:hover {{ background: rgba(255,255,255,0.35); }}
 
+        /* Barra Inferior Fixa do Carrinho */
         .cart-bar {{
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -167,13 +171,14 @@ html_conteudo = f"""<!DOCTYPE html>
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 100;
+            z-index: 200;
         }}
 
         .cart-actions {{ display: flex; gap: 8px; }}
         .btn-open-cart {{ background: #4a2511; color: white; border: none; padding: 10px 16px; border-radius: 25px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }}
         .btn-whatsapp {{ background: #25d366; color: white; border: none; padding: 10px 18px; border-radius: 25px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 0.85rem; }}
 
+        /* Modal do Carrinho */
         .modal-overlay {{
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -181,7 +186,7 @@ html_conteudo = f"""<!DOCTYPE html>
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 200;
+            z-index: 300;
             padding: 15px;
         }}
 
@@ -221,8 +226,24 @@ html_conteudo = f"""<!DOCTYPE html>
         .item-title {{ font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }}
         .item-price {{ font-size: 0.8rem; color: #4a2511; font-weight: 600; }}
 
+        /* Controles de Quantidade (+ e -) */
         .qty-controls {{ display: flex; align-items: center; gap: 8px; }}
-        .btn-qty {{ background: #eee; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 16px; }}
+        .btn-qty {{
+            background: #eee;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }}
+        .btn-qty:active {{ background: #ddd; transform: scale(0.95); }}
+        .btn-qty-remover {{ background: #ffebee; color: #c62828; }}
 
         .modal-footer {{ padding: 16px 20px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }}
         .modal-total {{ display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; }}
@@ -237,7 +258,7 @@ html_conteudo = f"""<!DOCTYPE html>
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
-            z-index: 300;
+            z-index: 400;
             font-size: 0.85rem;
         }}
     </style>
@@ -303,10 +324,10 @@ html_conteudo = f"""<!DOCTYPE html>
                         <div class="hotspot-prod" 
                              id="hotspot-${{prod.id}}"
                              style="left: ${{prod.x}}%; top: ${{prod.y}}%;"
-                             data-id="${{prod.id}}"
-                             data-nome="${{prod.nome.replace(/'/g, "")}}"
-                             data-preco="${{prod.preco}}"
-                             onclick="adicionarItem('${{prod.id}}', '${{prod.nome.replace(/'/g, "")}}', ${{prod.preco}})">
+                             onpointerdown="event.stopPropagation()"
+                             onmousedown="event.stopPropagation()"
+                             ontouchstart="event.stopPropagation()"
+                             onclick="adicionarItem(event, '${{prod.id}}', '${{prod.nome.replace(/'/g, "")}}', ${{prod.preco}})">
                             +
                             <span class="hotspot-badge" id="badge-${{prod.id}}">0</span>
                         </div>
@@ -344,12 +365,19 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('btn-finalizar-whats-modal').onclick = enviarWhatsApp;
         }}
 
-        function adicionarItem(id, nome, preco) {{
+        // Adiciona item impedindo propagação para a folha
+        function adicionarItem(e, id, nome, preco) {{
+            if (e) {{
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+
             if (!cart[id]) {{
                 cart[id] = {{ id, nome, preco, qtd: 0 }};
             }}
             cart[id].qtd += 1;
             atualizarCarrinho();
+            atualizarBadge(id);
 
             const toast = document.getElementById('toast');
             toast.innerText = `+1 ${{nome}} adicionado!`;
@@ -357,12 +385,25 @@ html_conteudo = f"""<!DOCTYPE html>
             setTimeout(() => toast.style.display = 'none', 1400);
         }}
 
+        // Modifica quantidade (+1 ou -1) ou remove completamente se chegar a 0
         function alterarQtd(id, delta) {{
             if (cart[id]) {{
                 cart[id].qtd += delta;
-                if (cart[id].qtd <= 0) delete cart[id];
+                if (cart[id].qtd <= 0) {{
+                    delete cart[id];
+                }}
                 atualizarCarrinho();
-                abrirModalCarrinho();
+                atualizarBadge(id);
+                renderizarCarrinhoModal();
+            }}
+        }}
+
+        function atualizarBadge(id) {{
+            const badge = document.getElementById(`badge-${{id}}`);
+            if (badge) {{
+                const qtd = cart[id] ? cart[id].qtd : 0;
+                badge.innerText = qtd;
+                badge.style.display = qtd > 0 ? 'block' : 'none';
             }}
         }}
 
@@ -372,12 +413,6 @@ html_conteudo = f"""<!DOCTYPE html>
             for (let id in cart) {{
                 count += cart[id].qtd;
                 total += cart[id].preco * cart[id].qtd;
-
-                const badge = document.getElementById(`badge-${{id}}`);
-                if (badge) {{
-                    badge.innerText = cart[id].qtd;
-                    badge.style.display = cart[id].qtd > 0 ? 'block' : 'none';
-                }}
             }}
             document.getElementById('cartCount').innerText = count;
             document.getElementById('cartTotal').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
@@ -385,32 +420,7 @@ html_conteudo = f"""<!DOCTYPE html>
         }}
 
         function abrirModalCarrinho() {{
-            const listEl = document.getElementById('cartList');
-            const items = Object.values(cart);
-            if (items.length === 0) {{
-                listEl.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">Seu carrinho está vazio.</p>';
-                document.getElementById('modalTotalValue').innerText = 'R$ 0,00';
-            }} else {{
-                let total = 0;
-                listEl.innerHTML = items.map(item => {{
-                    const sub = item.preco * item.qtd;
-                    total += sub;
-                    return `
-                        <div class="cart-item">
-                            <div>
-                                <div class="item-title">${{item.nome}}</div>
-                                <div class="item-price">R$ ${{item.preco.toFixed(2).replace('.', ',')}} un</div>
-                            </div>
-                            <div class="qty-controls">
-                                <button class="btn-qty" onclick="alterarQtd('${{item.id}}', -1)">-</button>
-                                <b>${{item.qtd}}</b>
-                                <button class="btn-qty" onclick="alterarQtd('${{item.id}}', 1)">+</button>
-                            </div>
-                        </div>
-                    `;
-                }}).join('');
-                document.getElementById('modalTotalValue').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
-            }}
+            renderizarCarrinhoModal();
             document.getElementById('modalCarrinho').style.display = 'flex';
         }}
 
@@ -418,17 +428,54 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('modalCarrinho').style.display = 'none';
         }}
 
-        function enviarWhatsApp() {{
-            let msg = "*Olá! Gostaria de fazer um pedido pelo Catálogo Cacau Show:*\\n\\n";
+        // Renderiza lista no modal com botões - e + para remover ou acrescentar
+        function renderizarCarrinhoModal() {{
+            const listEl = document.getElementById('cartList');
+            const items = Object.values(cart);
+            if (items.length === 0) {{
+                listEl.innerHTML = '<p style="text-align: center; color: #777; padding: 20px;">Seu carrinho está vazio.</p>';
+                document.getElementById('modalTotalValue').innerText = 'R$ 0,00';
+                document.getElementById('cartBar').style.display = 'none';
+                return;
+            }}
+
             let total = 0;
+            listEl.innerHTML = items.map(item => {{
+                const sub = item.preco * item.qtd;
+                total += sub;
+                return `
+                    <div class="cart-item">
+                        <div style="flex: 1; padding-right: 10px;">
+                            <div class="item-title">${{item.nome}}</div>
+                            <div class="item-price">R$ ${{item.preco.toFixed(2).replace('.', ',')}} un</div>
+                        </div>
+                        <div class="qty-controls">
+                            <button class="btn-qty btn-qty-remover" onclick="alterarQtd('${{item.id}}', -1)" title="Diminuir ou remover">-</button>
+                            <b style="min-width: 20px; text-align: center;">${{item.qtd}}</b>
+                            <button class="btn-qty" onclick="alterarQtd('${{item.id}}', 1)" title="Aumentar">+</button>
+                        </div>
+                    </div>
+                `;
+            }}).join('');
+
+            document.getElementById('modalTotalValue').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }}
+
+        // Envia mensagem limpa com quebras de linha reais no WhatsApp
+        function enviarWhatsApp() {{
+            const ENTER = String.fromCharCode(10); // Quebra de linha universal
+            let msg = "*Olá! Gostaria de fazer o pedido pelo catálogo:*" + ENTER + ENTER;
+            let total = 0;
+
             for (let id in cart) {{
                 if (cart[id].qtd > 0) {{
                     const sub = cart[id].preco * cart[id].qtd;
-                    msg += "• " + cart[id].qtd + "x " + cart[id].nome + " - R$ " + sub.toFixed(2).replace('.', ',') + "\\n";
+                    msg += "• " + cart[id].qtd + "x " + cart[id].nome + " - R$ " + sub.toFixed(2).replace('.', ',') + ENTER;
                     total += sub;
                 }}
             }}
-            msg += "\\n*Total do Pedido: R$ " + total.toFixed(2).replace('.', ',') + "*";
+
+            msg += ENTER + "*Total do Pedido: R$ " + total.toFixed(2).replace('.', ',') + "*";
             const link = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(msg);
             window.open(link, '_blank');
         }}
@@ -441,4 +488,4 @@ html_conteudo = f"""<!DOCTYPE html>
 with open("catalogo.html", "w", encoding="utf-8") as f:
     f.write(html_conteudo)
 
-print(f"[+] SUCESSO! 'catalogo.html' gerado com {total_paginas} páginas oficiais!")
+print(f"[+] SUCESSO! 'catalogo.html' gerado com {total_paginas} páginas sem bugs!")
