@@ -9,18 +9,11 @@ SUPABASE_KEY = "sb_publishable_31sF_uP_iTuYo3XRHnfqEA_bFQrg3XB"
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
-print("[*] Baixando catálogo oficial da Cacau Show...")
+print("[*] Baixando catálogo da Cacau Show...")
 resp = requests.get(CATALOGO_URL, headers=headers)
-if resp.status_code != 200:
-    print(f"[!] Erro ao acessar: {resp.status_code}")
-    exit(1)
-
 match = re.search(r"window\.staticSettings\s*=\s*(\{.+?\});", resp.text, re.DOTALL)
-if not match:
-    print("[!] Dados do catálogo não encontrados.")
-    exit(1)
-
 settings = json.loads(match.group(1))
+
 paper_aws = settings.get("aws", {}).get("url", "")
 policy = settings.get("aws", {}).get("policy", "")
 total_paginas = len(settings.get("pages", []))
@@ -28,7 +21,6 @@ chunks = settings.get("enrichments", {}).get("chunkUrls", {})
 
 produtos_por_pagina = {p: [] for p in range(1, total_paginas + 1)}
 
-print(f"[*] Mapeando produtos de {total_paginas} páginas...")
 for chunk_key, chunk_url in chunks.items():
     try:
         c_resp = requests.get(chunk_url, headers=headers)
@@ -50,18 +42,16 @@ for chunk_key, chunk_url in chunks.items():
                         "h": float(item.get("height", 0.08)) * 100,
                         "esgotado": False
                     })
-    except Exception as e:
+    except Exception:
         pass
 
 paginas = []
 for p in range(1, total_paginas + 1):
-    img_url = f"{paper_aws}Pages/{p}/Normal.jpg?{policy}"
-    prods = produtos_por_pagina.get(p, [])
     paginas.append({
         "numero": p,
-        "imagem": img_url,
-        "qtd_produtos": len(prods),
-        "produtos": prods,
+        "imagem": f"{paper_aws}Pages/{p}/Normal.jpg?{policy}",
+        "qtd_produtos": len(produtos_por_pagina.get(p, [])),
+        "produtos": produtos_por_pagina.get(p, []),
         "ativa": True
     })
 
@@ -71,7 +61,11 @@ html_conteudo = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Evita cache antigo no navegador -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Catálogo Digital - Cacau Show</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
@@ -79,15 +73,15 @@ html_conteudo = f"""<!DOCTYPE html>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }}
         body {{ background: #1c0e07; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; align-items: center; }}
-        header {{ width: 100%; padding: 14px; background: rgba(0,0,0,0.5); text-align: center; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+        header {{ width: 100%; padding: 12px; background: rgba(0,0,0,0.6); text-align: center; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1); }}
         
         .flipbook-container {{
-            margin: 15px auto;
+            margin: 10px auto;
             display: flex;
             justify-content: center;
             align-items: center;
             max-width: 100vw;
-            padding: 10px;
+            padding: 5px;
         }}
 
         .page {{
@@ -106,30 +100,31 @@ html_conteudo = f"""<!DOCTYPE html>
             object-fit: cover;
         }}
 
+        /* Botão do Produto com prioridade máxima de clique */
         .hotspot-prod {{
             position: absolute;
-            background: #25d366;
-            color: #fff;
+            background: #25d366 !important;
+            color: #fff !important;
             border: 2px solid #fff;
             border-radius: 50%;
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
             transform: translate(-50%, -50%);
-            transition: transform 0.2s, background 0.2s;
-            z-index: 100;
+            z-index: 9999 !important; /* Acima de qualquer elemento do PageFlip */
             user-select: none;
-            touch-action: manipulation;
+            touch-action: auto !important;
+            pointer-events: auto !important;
         }}
         .hotspot-prod:active {{
-            transform: translate(-50%, -50%) scale(1.2);
-            background: #1eb954;
+            transform: translate(-50%, -50%) scale(1.15);
+            background: #1eb954 !important;
         }}
 
         .hotspot-badge {{
@@ -148,7 +143,7 @@ html_conteudo = f"""<!DOCTYPE html>
         .hotspot-esgotado {{
             position: absolute;
             transform: translate(-50%, -50%);
-            background: rgba(220, 38, 38, 0.92);
+            background: rgba(220, 38, 38, 0.95);
             color: white;
             font-size: 10px;
             font-weight: 700;
@@ -158,7 +153,7 @@ html_conteudo = f"""<!DOCTYPE html>
             box-shadow: 0 3px 8px rgba(0,0,0,0.4);
             user-select: none;
             cursor: not-allowed;
-            z-index: 90;
+            z-index: 999;
             white-space: nowrap;
             letter-spacing: 0.5px;
             text-transform: uppercase;
@@ -191,7 +186,7 @@ html_conteudo = f"""<!DOCTYPE html>
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 200;
+            z-index: 10000;
         }}
 
         .cart-actions {{ display: flex; gap: 8px; }}
@@ -205,7 +200,7 @@ html_conteudo = f"""<!DOCTYPE html>
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 300;
+            z-index: 20000;
             padding: 15px;
         }}
 
@@ -231,7 +226,7 @@ html_conteudo = f"""<!DOCTYPE html>
             align-items: center;
         }}
 
-        .btn-close {{ background: none; border: none; color: white; font-size: 24px; cursor: pointer; }}
+        .btn-close {{ background: none; border: none; color: white; font-size: 26px; cursor: pointer; }}
         .modal-body {{ padding: 15px 20px; overflow-y: auto; flex-grow: 1; }}
 
         .cart-item {{
@@ -245,10 +240,12 @@ html_conteudo = f"""<!DOCTYPE html>
         .item-title {{ font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }}
         .item-price {{ font-size: 0.8rem; color: #4a2511; font-weight: 600; }}
 
+        /* CONTROLES DO CARRINHO (+ e -) */
         .qty-controls {{ display: flex; align-items: center; gap: 8px; }}
         .btn-qty {{
-            background: #eee;
-            border: none;
+            background: #f0ebe6 !important;
+            color: #222 !important;
+            border: 1px solid #ddd !important;
             width: 32px;
             height: 32px;
             border-radius: 50%;
@@ -259,8 +256,7 @@ html_conteudo = f"""<!DOCTYPE html>
             align-items: center;
             justify-content: center;
         }}
-        .btn-qty:active {{ background: #ddd; transform: scale(0.95); }}
-        .btn-qty-remover {{ background: #ffebee; color: #c62828; }}
+        .btn-qty-remover {{ background: #ffebee !important; color: #c62828 !important; border-color: #ffcdd2 !important; }}
 
         .modal-footer {{ padding: 16px 20px; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }}
         .modal-total {{ display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; }}
@@ -275,7 +271,7 @@ html_conteudo = f"""<!DOCTYPE html>
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
-            z-index: 400;
+            z-index: 30000;
             font-size: 0.85rem;
         }}
     </style>
@@ -288,7 +284,7 @@ html_conteudo = f"""<!DOCTYPE html>
     <div class="toast" id="toast">Item adicionado!</div>
 
     <div class="flipbook-container">
-        <div id="flipbook"></div>
+        <div id="flipbook">Carregando revista...</div>
     </div>
 
     <div class="nav-controls">
@@ -335,7 +331,7 @@ html_conteudo = f"""<!DOCTYPE html>
         const cart = {{}};
         let pageFlip = null;
 
-        async function carregarDadosPublicados() {{
+        async function inicializarCatalogoCompleto() {{
             try {{
                 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 const {{ data }} = await supabase
@@ -345,13 +341,12 @@ html_conteudo = f"""<!DOCTYPE html>
                     .single();
 
                 if (data && data.paginas && data.paginas.length > 0) {{
-                    // Filtra apenas as páginas ativas marcadas no botão 'Publicar' do gestor
-                    paginas = data.paginas.filter(p => p.ativa !== false);
+                    // Pega APENAS as páginas que você selecionou e publicou
+                    paginas = data.paginas;
                     if (data.whatsapp) WHATSAPP = data.whatsapp;
-                    console.log("Catálogo sincronizado com a nuvem!");
                 }}
             }} catch (e) {{
-                console.log("Usando páginas locais de fallback.");
+                console.log("Modo offline ativo.");
             }}
 
             montarRevista();
@@ -374,10 +369,9 @@ html_conteudo = f"""<!DOCTYPE html>
                                 <div class="hotspot-prod" 
                                      id="hotspot-${{prod.id}}"
                                      style="left: ${{prod.x}}%; top: ${{prod.y}}%;"
-                                     onpointerdown="event.stopPropagation()"
-                                     onmousedown="event.stopPropagation()"
-                                     ontouchstart="event.stopPropagation()"
-                                     onclick="adicionarItem(event, '${{prod.id}}', '${{prod.nome.replace(/'/g, "")}}', ${{prod.preco}})">
+                                     data-id="${{prod.id}}"
+                                     data-nome="${{prod.nome.replace(/'/g, "")}}"
+                                     data-preco="${{prod.preco}}">
                                     +
                                     <span class="hotspot-badge" id="badge-${{prod.id}}">0</span>
                                 </div>
@@ -409,6 +403,27 @@ html_conteudo = f"""<!DOCTYPE html>
                 document.getElementById('pageInfo').innerText = `Página ${{e.data + 1}} de ${{paginas.length}}`;
             }});
 
+            // TRAVA DE OURO: Intercepta o toque nos botões antes que o PageFlip sinta o clique
+            document.querySelectorAll('.hotspot-prod').forEach(btn => {{
+                const pararEvento = (e) => {{
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }};
+
+                btn.addEventListener('pointerdown', pararEvento, {{ capture: true }});
+                btn.addEventListener('mousedown', pararEvento, {{ capture: true }});
+                btn.addEventListener('touchstart', pararEvento, {{ capture: true }});
+
+                btn.addEventListener('click', (e) => {{
+                    pararEvento(e);
+                    e.preventDefault();
+                    const id = btn.getAttribute('data-id');
+                    const nome = btn.getAttribute('data-nome');
+                    const preco = Number(btn.getAttribute('data-preco'));
+                    adicionarItem(id, nome, preco);
+                }}, {{ capture: true }});
+            }});
+
             document.getElementById('btn-ant').onclick = () => pageFlip.flipPrev();
             document.getElementById('btn-prox').onclick = () => pageFlip.flipNext();
             document.getElementById('btn-ver-carrinho').onclick = abrirModalCarrinho;
@@ -417,12 +432,7 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('btn-finalizar-whats-modal').onclick = enviarWhatsApp;
         }}
 
-        function adicionarItem(e, id, nome, preco) {{
-            if (e) {{
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-
+        function adicionarItem(id, nome, preco) {{
             if (!cart[id]) {{
                 cart[id] = {{ id, nome, preco, qtd: 0 }};
             }}
@@ -436,7 +446,8 @@ html_conteudo = f"""<!DOCTYPE html>
             setTimeout(() => toast.style.display = 'none', 1400);
         }}
 
-        function alterarQtd(id, delta) {{
+        // Altera quantidade (+1 ou -1)
+        window.alterarQtd = function(id, delta) {{
             if (cart[id]) {{
                 cart[id].qtd += delta;
                 if (cart[id].qtd <= 0) {{
@@ -446,7 +457,7 @@ html_conteudo = f"""<!DOCTYPE html>
                 atualizarBadge(id);
                 renderizarCarrinhoModal();
             }}
-        }}
+        }};
 
         function atualizarBadge(id) {{
             const badge = document.getElementById(`badge-${{id}}`);
@@ -499,9 +510,9 @@ html_conteudo = f"""<!DOCTYPE html>
                             <div class="item-price">R$ ${{item.preco.toFixed(2).replace('.', ',')}} un</div>
                         </div>
                         <div class="qty-controls">
-                            <button class="btn-qty btn-qty-remover" onclick="alterarQtd('${{item.id}}', -1)" title="Diminuir ou remover">-</button>
-                            <b style="min-width: 20px; text-align: center;">${{item.qtd}}</b>
-                            <button class="btn-qty" onclick="alterarQtd('${{item.id}}', 1)" title="Aumentar">+</button>
+                            <button class="btn-qty btn-qty-remover" onclick="alterarQtd('${{item.id}}', -1)">-</button>
+                            <b style="min-width: 24px; text-align: center;">${{item.qtd}}</b>
+                            <button class="btn-qty" onclick="alterarQtd('${{item.id}}', 1)">+</button>
                         </div>
                     </div>
                 `;
@@ -528,7 +539,7 @@ html_conteudo = f"""<!DOCTYPE html>
             window.open(link, '_blank');
         }}
 
-        window.onload = carregarDadosPublicados;
+        window.onload = inicializarCatalogoCompleto;
     </script>
 </body>
 </html>"""
@@ -536,4 +547,4 @@ html_conteudo = f"""<!DOCTYPE html>
 with open("catalogo.html", "w", encoding="utf-8") as f:
     f.write(html_conteudo)
 
-print(f"[+] SUCESSO! 'catalogo.html' gerado e sincronizado com o Supabase!")
+print(f"[+] SUCESSO! 'catalogo.html' gerado com proteção total!")

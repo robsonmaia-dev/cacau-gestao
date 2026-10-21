@@ -154,7 +154,7 @@ export class ControladorCatalogo {
             alert(`⚡ Estoque sincronizado! ${ajustados} itens ajustados conforme o estoque real.`);
         });
 
-        // PUBLICAR REVISTA PARA OS CLIENTES NO SUPABASE
+        // PUBLICAR REVISTA PARA OS CLIENTES NO SUPABASE (BLINDADO)
         btnPublicar?.addEventListener('click', async () => {
             const inputWhats = document.getElementById('campo-whats-vendedor');
             const whats = inputWhats.value.replace(/\D/g, '');
@@ -164,40 +164,69 @@ export class ControladorCatalogo {
             this.whatsapp = whatsFinal;
             localStorage.setItem('cacau_whatsapp_vendas', whatsFinal);
 
-            const paginasAtualizadas = this.paginas.map(p => {
-                const chkPag = document.querySelector(`.chk-pagina[data-pag="${p.numero}"]`);
-                const ativa = chkPag ? chkPag.checked : p.ativa;
-
-                const produtosAjustados = p.produtos.map(prod => {
-                    const chkProd = document.querySelector(`.chk-prod[data-prod-id="${prod.id}"]`);
-                    return {
-                        ...prod,
-                        esgotado: chkProd ? !chkProd.checked : prod.esgotado
-                    };
-                });
-
-                return {
-                    ...p,
-                    ativa: ativa,
-                    produtos: produtosAjustados
-                };
+            // Mapeia o estado diretamente das checkboxes que existem na tela
+            const checkboxesPaginas = document.querySelectorAll('.chk-pagina');
+            const mapaPaginasAtivas = new Map();
+            checkboxesPaginas.forEach(chk => {
+                mapaPaginasAtivas.set(Number(chk.getAttribute('data-pag')), chk.checked);
             });
 
-            this.paginas = paginasAtualizadas;
+            const checkboxesProdutos = document.querySelectorAll('.chk-prod');
+            const mapaProdutosDisponiveis = new Map();
+            checkboxesProdutos.forEach(chk => {
+                mapaProdutosDisponiveis.set(chk.getAttribute('data-prod-id'), chk.checked);
+            });
+
+            // Aplica as escolhas: se a página foi desmarcada, ela NÃO vai para o cliente
+            const paginasFinais = [];
+
+            this.paginas.forEach(p => {
+                const estaAtiva = mapaPaginasAtivas.has(p.numero)
+                    ? mapaPaginasAtivas.get(p.numero)
+                    : (p.ativa !== false);
+
+                // Só inclui na revista se a página estiver MARCADA
+                if (estaAtiva) {
+                    const produtosAjustados = p.produtos.map(prod => {
+                        const marcado = mapaProdutosDisponiveis.has(prod.id)
+                            ? mapaProdutosDisponiveis.get(prod.id)
+                            : !prod.esgotado;
+
+                        return {
+                            ...prod,
+                            esgotado: !marcado // Se desmarcou, vira ESGOTADO
+                        };
+                    });
+
+                    paginasFinais.append ? paginasFinais.append : paginasFinais.push({
+                        ...p,
+                        ativa: true,
+                        produtos: produtosAjustados
+                    });
+                }
+            });
+
+            if (paginasFinais.length === 0) {
+                return alert("Atenção: Você desmarcou todas as páginas! Marque pelo menos uma página para publicar.");
+            }
 
             try {
                 btnPublicar.disabled = true;
                 btnPublicar.innerText = "Publicando...";
 
-                await clienteSupabase.from('catalogo_publico').upsert({
+                // Grava no Supabase apenas as páginas que você escolheu
+                const { error } = await clienteSupabase.from('catalogo_publico').upsert({
                     id: 'principal',
                     whatsapp: whatsFinal,
-                    paginas: paginasAtualizadas,
+                    paginas: paginasFinais,
                     atualizado_em: new Date().toISOString()
                 });
 
-                alert("🎉 Revista Digital publicada com sucesso!\nTodos os clientes já estão vendo as novas páginas e estoques atualizados.");
-                await this.atualizarTela();
+                if (error) throw error;
+
+                alert(`🎉 Revista Publicada com Sucesso!\n${paginasFinais.length} páginas ativas enviadas para a nuvem.`);
+                btnPublicar.disabled = false;
+                btnPublicar.innerText = "💾 Publicar Revista para Clientes";
             } catch (e) {
                 alert(`Erro ao publicar: ${e.message}`);
                 btnPublicar.disabled = false;
