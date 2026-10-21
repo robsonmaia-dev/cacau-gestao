@@ -2,13 +2,14 @@ import json
 import re
 import requests
 
-# URL do Ciclo Oficial da Cacau Show
 CATALOGO_URL = "https://catalogo.cacaushow.com.br/2026/catalogo/ciclo-13-e-14/catalogo-vd-ciclos-13-e-14/?page=2"
-WHATSAPP_VENDEDOR = "5541984051401"
+WHATSAPP_PADRAO = "5541984051401"
+SUPABASE_URL = "https://bvqyiccynvgndugxayzh.supabase.co"
+SUPABASE_KEY = "sb_publishable_31sF_uP_iTuYo3XRHnfqEA_bFQrg3XB"
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
-print("[*] Conectando ao catálogo oficial da Cacau Show...")
+print("[*] Baixando catálogo oficial da Cacau Show...")
 resp = requests.get(CATALOGO_URL, headers=headers)
 if resp.status_code != 200:
     print(f"[!] Erro ao acessar: {resp.status_code}")
@@ -27,7 +28,7 @@ chunks = settings.get("enrichments", {}).get("chunkUrls", {})
 
 produtos_por_pagina = {p: [] for p in range(1, total_paginas + 1)}
 
-print(f"[*] Mapeando produtos interativos de {total_paginas} páginas...")
+print(f"[*] Mapeando produtos de {total_paginas} páginas...")
 for chunk_key, chunk_url in chunks.items():
     try:
         c_resp = requests.get(chunk_url, headers=headers)
@@ -46,10 +47,11 @@ for chunk_key, chunk_url in chunks.items():
                         "x": float(item.get("x", 0)) * 100,
                         "y": float(item.get("y", 0)) * 100,
                         "w": float(item.get("width", 0.1)) * 100,
-                        "h": float(item.get("height", 0.08)) * 100
+                        "h": float(item.get("height", 0.08)) * 100,
+                        "esgotado": False
                     })
     except Exception as e:
-        print(f"[!] Aviso no lote {chunk_key}: {e}")
+        pass
 
 paginas = []
 for p in range(1, total_paginas + 1):
@@ -59,7 +61,8 @@ for p in range(1, total_paginas + 1):
         "numero": p,
         "imagem": img_url,
         "qtd_produtos": len(prods),
-        "produtos": prods
+        "produtos": prods,
+        "ativa": True
     })
 
 paginas_json = json.dumps(paginas, ensure_ascii=False)
@@ -72,6 +75,7 @@ html_conteudo = f"""<!DOCTYPE html>
     <title>Catálogo Digital - Cacau Show</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }}
         body {{ background: #1c0e07; color: #fff; min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; align-items: center; }}
@@ -102,7 +106,6 @@ html_conteudo = f"""<!DOCTYPE html>
             object-fit: cover;
         }}
 
-        /* Botão do Produto com proteção contra arrasto */
         .hotspot-prod {{
             position: absolute;
             background: #25d366;
@@ -120,7 +123,7 @@ html_conteudo = f"""<!DOCTYPE html>
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transform: translate(-50%, -50%);
             transition: transform 0.2s, background 0.2s;
-            z-index: 100; /* Fica acima da camada de virada de página */
+            z-index: 100;
             user-select: none;
             touch-action: manipulation;
         }}
@@ -142,6 +145,25 @@ html_conteudo = f"""<!DOCTYPE html>
             display: none;
         }}
 
+        .hotspot-esgotado {{
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.92);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 12px;
+            border: 1.5px solid white;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            user-select: none;
+            cursor: not-allowed;
+            z-index: 90;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }}
+
         .nav-controls {{
             display: flex;
             gap: 15px;
@@ -158,9 +180,7 @@ html_conteudo = f"""<!DOCTYPE html>
             cursor: pointer;
             font-weight: 600;
         }}
-        .btn-nav:hover {{ background: rgba(255,255,255,0.35); }}
 
-        /* Barra Inferior Fixa do Carrinho */
         .cart-bar {{
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -178,7 +198,6 @@ html_conteudo = f"""<!DOCTYPE html>
         .btn-open-cart {{ background: #4a2511; color: white; border: none; padding: 10px 16px; border-radius: 25px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }}
         .btn-whatsapp {{ background: #25d366; color: white; border: none; padding: 10px 18px; border-radius: 25px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 0.85rem; }}
 
-        /* Modal do Carrinho */
         .modal-overlay {{
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -226,7 +245,6 @@ html_conteudo = f"""<!DOCTYPE html>
         .item-title {{ font-size: 0.88rem; font-weight: 600; margin-bottom: 2px; }}
         .item-price {{ font-size: 0.8rem; color: #4a2511; font-weight: 600; }}
 
-        /* Controles de Quantidade (+ e -) */
         .qty-controls {{ display: flex; align-items: center; gap: 8px; }}
         .btn-qty {{
             background: #eee;
@@ -240,7 +258,6 @@ html_conteudo = f"""<!DOCTYPE html>
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.15s;
         }}
         .btn-qty:active {{ background: #ddd; transform: scale(0.95); }}
         .btn-qty-remover {{ background: #ffebee; color: #c62828; }}
@@ -310,28 +327,63 @@ html_conteudo = f"""<!DOCTYPE html>
     </div>
 
     <script>
-        const paginas = {paginas_json};
-        const WHATSAPP = "{WHATSAPP_VENDEDOR}";
+        let paginas = {paginas_json};
+        let WHATSAPP = "{WHATSAPP_PADRAO}";
+        const SUPABASE_URL = "{SUPABASE_URL}";
+        const SUPABASE_KEY = "{SUPABASE_KEY}";
+        
         const cart = {{}};
         let pageFlip = null;
+
+        async function carregarDadosPublicados() {{
+            try {{
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const {{ data }} = await supabase
+                    .from('catalogo_publico')
+                    .select('*')
+                    .eq('id', 'principal')
+                    .single();
+
+                if (data && data.paginas && data.paginas.length > 0) {{
+                    // Filtra apenas as páginas ativas marcadas no botão 'Publicar' do gestor
+                    paginas = data.paginas.filter(p => p.ativa !== false);
+                    if (data.whatsapp) WHATSAPP = data.whatsapp;
+                    console.log("Catálogo sincronizado com a nuvem!");
+                }}
+            }} catch (e) {{
+                console.log("Usando páginas locais de fallback.");
+            }}
+
+            montarRevista();
+        }}
 
         function montarRevista() {{
             const bookEl = document.getElementById('flipbook');
             bookEl.innerHTML = paginas.map(p => `
                 <div class="page">
                     <img class="bg-page" src="${{p.imagem}}" alt="Página ${{p.numero}}">
-                    ${{p.produtos.map(prod => `
-                        <div class="hotspot-prod" 
-                             id="hotspot-${{prod.id}}"
-                             style="left: ${{prod.x}}%; top: ${{prod.y}}%;"
-                             onpointerdown="event.stopPropagation()"
-                             onmousedown="event.stopPropagation()"
-                             ontouchstart="event.stopPropagation()"
-                             onclick="adicionarItem(event, '${{prod.id}}', '${{prod.nome.replace(/'/g, "")}}', ${{prod.preco}})">
-                            +
-                            <span class="hotspot-badge" id="badge-${{prod.id}}">0</span>
-                        </div>
-                    `).join('')}}
+                    ${{p.produtos.map(prod => {{
+                        if (prod.esgotado) {{
+                            return `
+                                <div class="hotspot-esgotado" style="left: ${{prod.x}}%; top: ${{prod.y}}%;">
+                                    Esgotado
+                                </div>
+                            `;
+                        }} else {{
+                            return `
+                                <div class="hotspot-prod" 
+                                     id="hotspot-${{prod.id}}"
+                                     style="left: ${{prod.x}}%; top: ${{prod.y}}%;"
+                                     onpointerdown="event.stopPropagation()"
+                                     onmousedown="event.stopPropagation()"
+                                     ontouchstart="event.stopPropagation()"
+                                     onclick="adicionarItem(event, '${{prod.id}}', '${{prod.nome.replace(/'/g, "")}}', ${{prod.preco}})">
+                                    +
+                                    <span class="hotspot-badge" id="badge-${{prod.id}}">0</span>
+                                </div>
+                            `;
+                        }}
+                    }}).join('')}}
                 </div>
             `).join('');
 
@@ -365,7 +417,6 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('btn-finalizar-whats-modal').onclick = enviarWhatsApp;
         }}
 
-        // Adiciona item impedindo propagação para a folha
         function adicionarItem(e, id, nome, preco) {{
             if (e) {{
                 e.stopPropagation();
@@ -385,7 +436,6 @@ html_conteudo = f"""<!DOCTYPE html>
             setTimeout(() => toast.style.display = 'none', 1400);
         }}
 
-        // Modifica quantidade (+1 ou -1) ou remove completamente se chegar a 0
         function alterarQtd(id, delta) {{
             if (cart[id]) {{
                 cart[id].qtd += delta;
@@ -428,7 +478,6 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('modalCarrinho').style.display = 'none';
         }}
 
-        // Renderiza lista no modal com botões - e + para remover ou acrescentar
         function renderizarCarrinhoModal() {{
             const listEl = document.getElementById('cartList');
             const items = Object.values(cart);
@@ -461,9 +510,8 @@ html_conteudo = f"""<!DOCTYPE html>
             document.getElementById('modalTotalValue').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
         }}
 
-        // Envia mensagem limpa com quebras de linha reais no WhatsApp
         function enviarWhatsApp() {{
-            const ENTER = String.fromCharCode(10); // Quebra de linha universal
+            const ENTER = String.fromCharCode(10);
             let msg = "*Olá! Gostaria de fazer o pedido pelo catálogo:*" + ENTER + ENTER;
             let total = 0;
 
@@ -480,7 +528,7 @@ html_conteudo = f"""<!DOCTYPE html>
             window.open(link, '_blank');
         }}
 
-        window.onload = montarRevista;
+        window.onload = carregarDadosPublicados;
     </script>
 </body>
 </html>"""
@@ -488,4 +536,4 @@ html_conteudo = f"""<!DOCTYPE html>
 with open("catalogo.html", "w", encoding="utf-8") as f:
     f.write(html_conteudo)
 
-print(f"[+] SUCESSO! 'catalogo.html' gerado com {total_paginas} páginas sem bugs!")
+print(f"[+] SUCESSO! 'catalogo.html' gerado e sincronizado com o Supabase!")
