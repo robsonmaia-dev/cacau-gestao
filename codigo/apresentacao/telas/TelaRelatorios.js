@@ -1,7 +1,3 @@
-/**
- * TELA: TelaRelatorios
- * Interface visual do Balanço Financeiro (DRE) e registro de perdas.
- */
 export class TelaRelatorios {
     static formatarMoeda(valor) {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
@@ -9,16 +5,27 @@ export class TelaRelatorios {
 
     static renderizar(container, balanco, produtos = []) {
         container.innerHTML = `
-            <!-- Painel de Lucro Líquido Real -->
-            <div class="cartao" style="background: linear-gradient(135deg, var(--cor-primaria), #1a0c07); color: #FFF; text-align: center; padding: 24px 16px;">
+            <!-- Painel de Lucro das Vendas Realizadas -->
+            <div class="cartao" style="background: linear-gradient(135deg, var(--cor-primaria), #1a0c07); color: #FFF; text-align: center; padding: 22px 16px;">
                 <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--cor-secundaria); font-weight: 700; letter-spacing: 1px;">
-                    Lucro Líquido Real (No Bolso)
+                    Lucro das Vendas Realizadas
                 </div>
                 <div style="font-size: 2.2rem; font-weight: 900; margin: 8px 0; color: #FFF;">
                     ${this.formatarMoeda(balanco.lucroLiquidoReal)}
                 </div>
-                <div style="font-size: 0.85rem; opacity: 0.85;">
+                <div style="font-size: 0.82rem; opacity: 0.85; margin-bottom: 14px;">
                     Margem Líquida: <strong>${balanco.margemLiquidaPercentual}%</strong> | ${balanco.totalVendasRealizadas} vendas feitas
+                </div>
+
+                <div style="display: flex; gap: 8px; justify-content: center; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
+                    <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 8px; padding: 6px 12px; flex: 1; text-align: center;">
+                        <div style="font-size: 0.68rem; color: #2ecc71; text-transform: uppercase; font-weight: 700;">🟢 No Bolso (Pix)</div>
+                        <div style="font-size: 1rem; font-weight: 800; color: #FFF; margin-top: 2px;">+ ${this.formatarMoeda(balanco.lucroRealizadoPix)}</div>
+                    </div>
+                    <div style="background: rgba(243, 156, 18, 0.15); border: 1px solid rgba(243, 156, 18, 0.4); border-radius: 8px; padding: 6px 12px; flex: 1; text-align: center;">
+                        <div style="font-size: 0.68rem; color: #f39c12; text-transform: uppercase; font-weight: 700;">⏳ No Fiado (A Receber)</div>
+                        <div style="font-size: 1rem; font-weight: 800; color: #FFF; margin-top: 2px;">+ ${this.formatarMoeda(balanco.lucroPendenteFiado)}</div>
+                    </div>
                 </div>
             </div>
 
@@ -27,27 +34,29 @@ export class TelaRelatorios {
                 <div class="card-metrica">
                     <div class="metrica-rotulo">Receita Bruta Total</div>
                     <div class="metrica-valor positivo">${this.formatarMoeda(balanco.receitaBruta)}</div>
+                    <div style="font-size: 0.68rem; color: var(--cor-texto-suave); margin-top: 2px;">Pix + Fiado</div>
                 </div>
                 <div class="card-metrica">
                     <div class="metrica-rotulo">Custo de Compra (CMV)</div>
                     <div class="metrica-valor">${this.formatarMoeda(balanco.custoMercadoriasVendidas)}</div>
+                    <div style="font-size: 0.68rem; color: var(--cor-texto-suave); margin-top: 2px;">Custo do que saiu</div>
                 </div>
                 <div class="card-metrica">
-                    <div class="metrica-rotulo">Prejuízos (Perdas)</div>
-                    <div class="metrica-valor negativo">${this.formatarMoeda(balanco.prejuizoTotalPerdas)}</div>
+                    <div class="metrica-rotulo">Total a Receber (Fiado)</div>
+                    <div class="metrica-valor alerta">${this.formatarMoeda(balanco.totalAReceberFiado)}</div>
+                    <div style="font-size: 0.68rem; color: var(--cor-texto-suave); margin-top: 2px;">Com a equipe</div>
                 </div>
                 <div class="card-metrica">
                     <div class="metrica-rotulo">Capital em Estoque</div>
                     <div class="metrica-valor">${this.formatarMoeda(balanco.capitalEstoqueParado)}</div>
+                    <div style="font-size: 0.68rem; color: var(--cor-texto-suave); margin-top: 2px;">Custo na mesa</div>
                 </div>
             </div>
 
-            <!-- Botão para Baixar Perda -->
             <button id="btn-abrir-modal-perda" class="botao botao-perigo botao-bloco" style="margin-bottom: 16px;">
                 ⚠️ Registrar Perda (Vencido, Derretido ou Sumido)
             </button>
 
-            <!-- Detalhamento de Perdas Operacionais -->
             <div class="cartao">
                 <div class="cartao-cabecalho">
                     <span class="cartao-titulo">Onde foi o Prejuízo?</span>
@@ -72,7 +81,6 @@ export class TelaRelatorios {
                 </div>
             </div>
 
-            <!-- MODAL: REGISTRAR PERDA OPERACIONAL -->
             <div id="modal-perda" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">

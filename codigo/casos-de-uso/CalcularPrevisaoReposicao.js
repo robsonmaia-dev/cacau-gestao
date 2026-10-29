@@ -1,12 +1,4 @@
-/**
- * CASO DE USO: CalcularPrevisaoReposicao
- * Calcula a velocidade média de vendas e estima em quantos dias o estoque acabará.
- */
 export class CalcularPrevisaoReposicao {
-    /**
-     * @param {import('../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
-     * @param {import('../repositorios/RepositorioVendas.js').RepositorioVendas} repositorioVendas
-     */
     constructor(repositorioProdutos, repositorioVendas) {
         this.repositorioProdutos = repositorioProdutos;
         this.repositorioVendas = repositorioVendas;
@@ -27,13 +19,19 @@ export class CalcularPrevisaoReposicao {
             }));
         }
 
-        // 1. Calcula o intervalo de dias do histórico (mínimo de 1 dia)
         const datas = vendas.map(v => new Date(v.dataHora).getTime());
         const dataMinima = Math.min(...datas);
         const dataMaxima = Math.max(...datas);
-        const diferencaDias = Math.max(1, Math.ceil((dataMaxima - dataMinima) / (1000 * 60 * 60 * 24)));
+        const agora = new Date().getTime();
 
-        // 2. Calcula total vendido por produto
+        const diasEntreVendas = Math.ceil((dataMaxima - dataMinima) / (1000 * 60 * 60 * 24));
+        const diasAteHoje = Math.ceil((agora - dataMinima) / (1000 * 60 * 60 * 24));
+
+        let diferencaDias = Math.max(diasEntreVendas, diasAteHoje);
+        if (diferencaDias < 7) {
+            diferencaDias = 20; // 20 dias úteis padrão corporativo
+        }
+
         const vendasPorProduto = new Map();
         vendas.forEach(v => {
             v.itens.forEach(item => {
@@ -42,7 +40,6 @@ export class CalcularPrevisaoReposicao {
             });
         });
 
-        // 3. Calcula cobertura e urgência
         return produtos.map(prod => {
             const estoqueAtual = prod.obterEstoqueTotal();
             const totalVendido = vendasPorProduto.get(prod.id) || 0;
@@ -58,9 +55,9 @@ export class CalcularPrevisaoReposicao {
                 diasCobertura = Math.ceil(estoqueAtual / consumoDiarioMedio);
 
                 if (diasCobertura <= 3) {
-                    status = 'CRITICO'; // Menos de 3 dias de chocolate na mesa
+                    status = 'CRITICO';
                 } else if (diasCobertura <= 7 || prod.precisaDeReposicao()) {
-                    status = 'ATENCAO'; // Menos de uma semana
+                    status = 'ATENCAO';
                 }
             } else if (prod.precisaDeReposicao()) {
                 status = 'ATENCAO';
@@ -75,7 +72,6 @@ export class CalcularPrevisaoReposicao {
                 status: status
             };
         }).sort((a, b) => {
-            // Ordena pelo mais urgente (esgotados e críticos primeiro)
             const prioridade = { ESGOTADO: 0, CRITICO: 1, ATENCAO: 2, SEM_HISTORICO: 3, ESTAVEL: 4 };
             return prioridade[a.status] - prioridade[b.status];
         });

@@ -2,11 +2,6 @@ import { TelaEstoque } from '../telas/TelaEstoque.js';
 import { Produto } from '../../dominio/Produto.js';
 
 export class ControladorEstoque {
-    /**
-     * @param {import('../../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
-     * @param {import('../../casos-de-uso/ComprarEstoque.js').ComprarEstoque} casoDeUsoComprarEstoque
-     * @param {Function} [aoAtualizarDados] - Callback para sincronizar outras telas
-     */
     constructor(repositorioProdutos, casoDeUsoComprarEstoque, aoAtualizarDados) {
         this.repositorioProdutos = repositorioProdutos;
         this.casoDeUsoComprarEstoque = casoDeUsoComprarEstoque;
@@ -35,7 +30,6 @@ export class ControladorEstoque {
         const formProduto = document.getElementById('form-novo-produto');
         const formCompra = document.getElementById('form-nova-compra');
 
-        // Abertura para NOVO PRODUTO (limpa os campos)
         btnModalProd?.addEventListener('click', () => {
             document.getElementById('campo-prod-id').value = '';
             document.getElementById('campo-prod-nome').value = '';
@@ -48,7 +42,6 @@ export class ControladorEstoque {
 
         btnModalCompra?.addEventListener('click', () => this.alternarModal('modal-compra', true));
 
-        // Fechar modais
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {
             btn.addEventListener('click', () => {
                 const modalId = btn.getAttribute('data-fechar');
@@ -56,7 +49,6 @@ export class ControladorEstoque {
             });
         });
 
-        // BOTÃO EDITAR PRODUTO (Preenche os campos com os dados existentes)
         document.querySelectorAll('.btn-editar-produto').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
@@ -76,7 +68,6 @@ export class ControladorEstoque {
             });
         });
 
-        // BOTÃO EXCLUIR PRODUTO (Com proteção contra exclusão acidental)
         document.querySelectorAll('.btn-excluir-produto').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
@@ -101,9 +92,14 @@ export class ControladorEstoque {
             });
         });
 
-        // SALVAR PRODUTO (INCLUSÃO OU EDIÇÃO)
         formProduto?.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btnSalvar = document.getElementById('btn-salvar-produto');
+            if (btnSalvar) {
+                btnSalvar.disabled = true;
+                btnSalvar.innerText = "Salvando produto...";
+            }
+
             const idExistente = document.getElementById('campo-prod-id').value;
             const nome = document.getElementById('campo-prod-nome').value;
             const categoria = document.getElementById('campo-prod-categoria').value;
@@ -111,7 +107,6 @@ export class ControladorEstoque {
             const minimo = document.getElementById('campo-prod-minimo').value;
 
             try {
-                // Se já tinha id, preserva os lotes anteriores
                 const produtoExistente = idExistente ? produtos.find(p => p.id === idExistente) : null;
                 const produtoParaGravar = new Produto({
                     id: idExistente || undefined,
@@ -129,12 +124,23 @@ export class ControladorEstoque {
                 if (this.aoAtualizarDados) await this.aoAtualizarDados();
             } catch (erro) {
                 alert(`Erro: ${erro.message}`);
+            } finally {
+                if (btnSalvar) {
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerText = "Salvar Produto";
+                }
             }
         });
 
-        // REGISTRAR COMPRA
+        // TRAVA ANTI-DUPLO CLIQUE NA ENTRADA DE COMPRA
         formCompra?.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btnSubmeter = formCompra.querySelector('button[type="submit"]');
+            if (btnSubmeter) {
+                btnSubmeter.disabled = true;
+                btnSubmeter.innerText = "Registrando na nuvem...";
+            }
+
             try {
                 await this.casoDeUsoComprarEstoque.executar({
                     produtoId: document.getElementById('campo-compra-produto').value,
@@ -149,6 +155,11 @@ export class ControladorEstoque {
                 if (this.aoAtualizarDados) await this.aoAtualizarDados();
             } catch (erro) {
                 alert(`Erro: ${erro.message}`);
+            } finally {
+                if (btnSubmeter) {
+                    btnSubmeter.disabled = false;
+                    btnSubmeter.innerText = "Registrar Entrada no Estoque";
+                }
             }
         });
     }
