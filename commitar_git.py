@@ -2,11 +2,11 @@
 """
 Script de Commit e Push Automático - Cacau Gestão
 Consolida:
-1. Menu Híbrido com Gaveta Lateral e barra inferior ergonômica.
-2. Histórico de Vendas com filtros e estorno seguro em 1 clique.
-3. Modo PDV de Vendas Rápidas (Autocomplete, TAB/Enter, DD/MM/AA com calendário).
-4. Filtros inteligentes em Estoque, Clientes e Cobrança.
-5. Restauração completa dos estilos visuais de Inteligência & Gestão.
+1. Nova Tela Inicial (Home Dashboard moderno com atalhos de 1 toque).
+2. Barra inferior equilibrada com 4 botões (Início, Vendas, Estoque e Menu).
+3. Busca por categoria de chocolates (trufa, tablete) e botão de calendário 📅.
+4. Filtros inteligentes com digitação contínua em Estoque, Clientes e Cobrança.
+5. Purga automática de cache do navegador no Login e Logout.
 """
 
 import subprocess
@@ -30,12 +30,12 @@ def executar(comando):
 
 print("=== COMMIT AUTOMÁTICO: CACAU GESTÃO ===\n")
 
-# 1. Verifica se estamos no repositório
+# 1. Verifica se estamos dentro do repositório Git
 if executar("git rev-parse --is-inside-work-tree") != "true":
     print("[✘] Este diretório não é um repositório Git válido.")
     sys.exit(1)
 
-# 2. Verifica se há mudanças pendentes
+# 2. Verifica se há alterações pendentes
 status = executar("git status --porcelain")
 if not status:
     print("[!] Nenhuma alteração pendente para commitar.")
@@ -48,18 +48,18 @@ for linha in status.splitlines():
 # 3. Adiciona arquivos do projeto
 print("\n[*] Adicionando arquivos ao palco (git add)...")
 executar("git add index.html codigo/ estilos/")
-
-# Adiciona os scripts utilitários caso estejam na pasta
 executar("git add *.py")
 
 # 4. Mensagem detalhada do commit
 mensagem_commit = (
-    "feat: menu hibrido mobile, historico de vendas, PDV rapido e filtros globais\n\n"
-    "- Menu: barra inferior com 3 botoes amplos e gaveta lateral categorizada\n"
-    "- Historico: tela de historico com filtros e estorno/relancamento seguro (< 30 dias)\n"
-    "- PDV Vendas: busca em tempo real sem acentos para cliente e chocolate, suporte a TAB/Enter, data DD/MM/AA com calendario e memoria entre vendas\n"
-    "- Filtros Globais: busca e filtros adicionados em Estoque, Clientes e Cobranca\n"
-    "- Estilos: restauracao completa do termometro de payback, medalhas de podio e caixas flutuantes"
+    "feat: Home dashboard moderna, filtros globais em todas as telas e purga de cache\n\n"
+    "- Home: criacao da TelaHome com hero card, saldos do dia, 4 atalhos rapidos e pulso da mesa\n"
+    "- Navegacao: barra inferior com 4 botoes equilibrados (Inicio, Vendas, Estoque e Menu)\n"
+    "- Vendas: busca por categoria (trufa, tablete), botao visual de calendario, formato DD/MM/AA e TAB autocomplete\n"
+    "- Estoque: filtros inteligentes por busca textual, categoria e status (reposicao, esgotado, vencendo)\n"
+    "- Clientes: filtros por situacao (pendentes vs em dia) e canal (Teams vs WhatsApp) sem perda de foco\n"
+    "- Cobranca: busca em tempo real, ordenacao por maior divida e filtros de envio por canal\n"
+    "- Cache: purga automatica da Cache Storage API e service workers no login e logout"
 )
 
 print("[*] Gravando commit...")

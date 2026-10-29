@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <title>Cacau Gestão</title>
+    
     <link rel="stylesheet" href="estilos/variaveis.css">
     <link rel="stylesheet" href="estilos/estrutura.css">
     <link rel="stylesheet" href="estilos/componentes.css">
@@ -39,7 +45,7 @@
     <!-- APLICAÇÃO PRINCIPAL -->
     <div id="aplicacao-autenticada" style="display: none;">
 
-        <!-- OVERLAY E GAVETA LATERAL (DRAWER) -->
+        <!-- OVERLAY E GAVETA LATERAL -->
         <div id="menu-gaveta-overlay" class="gaveta-overlay"></div>
         <aside id="menu-gaveta-lateral" class="gaveta-lateral">
             <div class="gaveta-cabecalho">
@@ -54,8 +60,13 @@
             </div>
 
             <nav class="gaveta-corpo">
+                <button class="gaveta-item ativa" data-aba="aba-home">
+                    <span class="gaveta-icone">🏠</span>
+                    <span>Painel Inicial (Home)</span>
+                </button>
+
                 <div class="gaveta-grupo-titulo">Operação Diária</div>
-                <button class="gaveta-item ativa" data-aba="aba-vendas">
+                <button class="gaveta-item" data-aba="aba-vendas">
                     <span class="gaveta-icone">🛒</span>
                     <span>Registrar Vendas</span>
                 </button>
@@ -113,9 +124,12 @@
             </div>
         </header>
 
-        <!-- CONTEÚDO DAS SEÇÕES (ABAS) -->
+        <!-- CONTEÚDO DAS SEÇÕES -->
         <main class="conteudo-aplicacao">
-            <section id="aba-vendas" class="secao-aba ativa">
+            <section id="aba-home" class="secao-aba ativa">
+                <div id="conteudo-home">Carregando painel inicial...</div>
+            </section>
+            <section id="aba-vendas" class="secao-aba">
                 <h2>Registrar Vendas</h2>
                 <div id="conteudo-vendas">Carregando painel de vendas...</div>
             </section>
@@ -149,9 +163,13 @@
             </section>
         </main>
 
-        <!-- BARRA INFERIOR HÍBRIDA -->
+        <!-- BARRA INFERIOR MODERNA (4 BOTÕES EQUILIBRADOS) -->
         <nav class="barra-navegacao">
-            <button class="botao-aba ativa" data-aba="aba-vendas">
+            <button class="botao-aba ativa" data-aba="aba-home">
+                <span class="icone-aba">🏠</span>
+                <span>Início</span>
+            </button>
+            <button class="botao-aba" data-aba="aba-vendas">
                 <span class="icone-aba">🛒</span>
                 <span>Vendas</span>
             </button>
