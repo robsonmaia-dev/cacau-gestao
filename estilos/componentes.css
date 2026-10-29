@@ -1,18 +1,8 @@
-/* ============================================================
-   COMPONENTES VISUAIS COMPLETOS - CACAU GESTÃO
-   ============================================================ */
+/* =======================================================
+   ESTILOS GERAIS DE COMPONENTES: CACAU GESTÃO
+======================================================= */
 
-/* --- 1. AJUSTES DA BARRA DE NAVEGAÇÃO INFERIOR (6 ABAS) --- */
-.barra-navegacao .botao-aba {
-    font-size: 0.65rem;
-    padding: 4px 2px;
-}
-
-.barra-navegacao .icone-aba {
-    font-size: 1.15rem;
-}
-
-/* --- 2. CARDS E PAINÉIS --- */
+/* CARTÕES E CONTAINERS */
 .cartao {
     background-color: var(--cor-superficie);
     border: 1px solid var(--cor-borda);
@@ -35,7 +25,7 @@
     color: var(--cor-primaria);
 }
 
-/* --- 3. CARDS DE MÉTRICAS (GRID SUPERIOR) --- */
+/* GRADES E CARDS DE MÉTRICAS */
 .grade-metricas {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -69,7 +59,7 @@
 .metrica-valor.alerta { color: var(--cor-alerta); }
 .metrica-valor.negativo { color: var(--cor-perigo); }
 
-/* --- 4. FORMULÁRIOS E CAMPOS DE ENTRADA --- */
+/* FORMULÁRIOS E CAMPOS */
 .grupo-campo {
     margin-bottom: var(--espacamento-medio);
 }
@@ -85,7 +75,7 @@
 .campo-entrada,
 .campo-selecao {
     width: 100%;
-    height: 46px; /* Altura ergonômica para toque */
+    height: 46px;
     padding: 0 12px;
     border: 1.5px solid var(--cor-borda);
     border-radius: var(--borda-raio-pequeno);
@@ -102,7 +92,7 @@
     background-color: #FFFFFF;
 }
 
-/* --- 5. BOTÕES --- */
+/* BOTÕES PADRÃO */
 .botao {
     height: 46px;
     padding: 0 16px;
@@ -152,7 +142,7 @@
     color: var(--cor-primaria);
 }
 
-/* --- 6. ETIQUETAS E BADGES --- */
+/* ETIQUETAS E STATUS */
 .etiqueta {
     display: inline-block;
     padding: 3px 8px;
@@ -166,7 +156,7 @@
 .etiqueta-alerta { background-color: var(--cor-alerta-fundo); color: var(--cor-alerta); }
 .etiqueta-perigo { background-color: var(--cor-perigo-fundo); color: var(--cor-perigo); }
 
-/* --- 7. LISTAS E ITENS --- */
+/* LISTAS DE LINHAS */
 .lista-linhas {
     list-style: none;
 }
@@ -194,7 +184,7 @@
     margin-top: 2px;
 }
 
-/* --- 8. MODAIS (OCULTOS POR PADRÃO, ABREM COMO GAVETA) --- */
+/* JANELAS MODAIS */
 .fundo-modal {
     position: fixed;
     top: 0;
@@ -202,14 +192,14 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
-    display: none; /* Mantém escondido até ser acionado */
+    display: none;
     align-items: flex-end;
     justify-content: center;
     z-index: 1000;
 }
 
 .fundo-modal.aberto {
-    display: flex !important; /* Exibe ao clicar no botão */
+    display: flex !important;
 }
 
 .janela-modal {
@@ -243,7 +233,11 @@
     cursor: pointer;
 }
 
-/* --- 9. TERMÔMETRO DE PAYBACK & GESTÃO ESTRATÉGICA --- */
+/* =======================================================
+   DESIGN ESPECÍFICO DE INTELIGÊNCIA & GESTÃO
+======================================================= */
+
+/* 1. TERMÔMETRO DO INVESTIMENTO / PAYBACK */
 .cartao-termometro {
     background: linear-gradient(135deg, #2C1810, #150B07);
     color: #FFFFFF;
@@ -303,11 +297,11 @@
     opacity: 0.9;
 }
 
-/* --- 10. RANKING E BADGES DE POSIÇÃO (OURO, PRATA, BRONZE) --- */
+/* 2. ITENS DE RANKING E MEDALHAS DE PÓDIO */
 .item-ranking {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--cor-borda);
 }
@@ -317,33 +311,34 @@
 }
 
 .badge-posicao {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     flex-shrink: 0;
 }
 
 .badge-posicao.ouro {
     background-color: #FFE082;
     color: #8D6E63;
-    border: 1px solid #FFD54F;
+    border: 1.5px solid #FFD54F;
+    box-shadow: 0 2px 6px rgba(255, 213, 79, 0.4);
 }
 
 .badge-posicao.prata {
-    background-color: #CFD8DC;
+    background-color: #ECEFF1;
     color: #455A64;
-    border: 1px solid #B0BEC5;
+    border: 1.5px solid #CFD8DC;
 }
 
 .badge-posicao.bronze {
-    background-color: #D7CCC8;
+    background-color: #EFEBE9;
     color: #5D4037;
-    border: 1px solid #BCAAA4;
+    border: 1.5px solid #D7CCC8;
 }
 
 .badge-posicao.padrao {
@@ -352,7 +347,7 @@
     border: 1px solid var(--cor-borda);
 }
 
-/* --- 11. CARDS DE AVISO DE GIRO E ENCALHADOS --- */
+/* 3. CARDS DE ALERTA E GESTÃO ESTRATÉGICA */
 .card-aviso-gestao {
     border-left: 4px solid var(--cor-alerta);
     background-color: #FFFDF9;
@@ -370,4 +365,42 @@
 .card-aviso-gestao.positivo {
     border-left-color: var(--cor-sucesso);
     background-color: #F8FFF8;
+}
+
+/* =======================================================
+   LISTAS FLUTUANTES DE AUTOCOMPLETE (AUTO-SUGESTÃO)
+======================================================= */
+.lista-sugestoes-flutuante {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border: 2px solid var(--cor-secundaria);
+    border-radius: var(--borda-raio-pequeno);
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.item-sugestao {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--cor-borda);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    background: #FFF;
+    transition: background-color 0.1s ease;
+}
+
+.item-sugestao:last-child {
+    border-bottom: none;
+}
+
+.item-sugestao:active,
+.item-sugestao.selecionado {
+    background-color: var(--cor-secundaria-leve);
 }

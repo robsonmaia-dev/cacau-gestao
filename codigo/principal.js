@@ -1,14 +1,13 @@
 import { AutenticacaoServico } from './repositorios/AutenticacaoServico.js';
 
-// Repositórios
 import { RepositorioProdutos } from './repositorios/RepositorioProdutos.js';
 import { RepositorioClientes } from './repositorios/RepositorioClientes.js';
 import { RepositorioVendas } from './repositorios/RepositorioVendas.js';
 import { RepositorioPerdas } from './repositorios/RepositorioPerdas.js';
 
-// Casos de Uso
 import { ComprarEstoque } from './casos-de-uso/ComprarEstoque.js';
 import { RegistrarVenda } from './casos-de-uso/RegistrarVenda.js';
+import { EstornarVenda } from './casos-de-uso/EstornarVenda.js';
 import { GerarCobrancaMensal } from './casos-de-uso/GerarCobrancaMensal.js';
 import { RegistrarPagamento } from './casos-de-uso/RegistrarPagamento.js';
 import { RegistrarPerda } from './casos-de-uso/RegistrarPerda.js';
@@ -19,28 +18,55 @@ import { ObterDesempenhoProdutos } from './casos-de-uso/ObterDesempenhoProdutos.
 import { CalcularPrevisaoReposicao } from './casos-de-uso/CalcularPrevisaoReposicao.js';
 import { ObterPerfilClientes } from './casos-de-uso/ObterPerfilClientes.js';
 
-// Controladores
 import { ControladorEstoque } from './apresentacao/controladores/ControladorEstoque.js';
 import { ControladorVendas } from './apresentacao/controladores/ControladorVendas.js';
+import { ControladorHistoricoVendas } from './apresentacao/controladores/ControladorHistoricoVendas.js';
 import { ControladorClientes } from './apresentacao/controladores/ControladorClientes.js';
 import { ControladorCobranca } from './apresentacao/controladores/ControladorCobranca.js';
 import { ControladorRelatorios } from './apresentacao/controladores/ControladorRelatorios.js';
 import { ControladorGestao } from './apresentacao/controladores/ControladorGestao.js';
 import { ControladorCatalogo } from './apresentacao/controladores/ControladorCatalogo.js';
 
-function configurarNavegacaoAbas(aoMudarAba) {
-    const botoesNavegacao = document.querySelectorAll('.botao-aba');
+function configurarNavegacaoHibrida(aoMudarAba) {
+    const gaveta = document.getElementById('menu-gaveta-lateral');
+    const overlay = document.getElementById('menu-gaveta-overlay');
+    const btnHamburguerTopo = document.getElementById('btn-hamburguer-topo');
+    const btnMenuRodape = document.getElementById('btn-menu-rodape');
+    const btnFecharGaveta = document.getElementById('btn-fechar-gaveta');
+
+    const abrirGaveta = () => {
+        overlay.classList.add('visivel');
+        gaveta.classList.add('aberta');
+    };
+
+    const fecharGaveta = () => {
+        overlay.classList.remove('visivel');
+        gaveta.classList.remove('aberta');
+    };
+
+    btnHamburguerTopo?.addEventListener('click', abrirGaveta);
+    btnMenuRodape?.addEventListener('click', abrirGaveta);
+    btnFecharGaveta?.addEventListener('click', fecharGaveta);
+    overlay?.addEventListener('click', fecharGaveta);
+
+    const botoesNavegacao = document.querySelectorAll('.botao-aba[data-aba], .gaveta-item[data-aba]');
     const secoesAba = document.querySelectorAll('.secao-aba');
 
     botoesNavegacao.forEach(botao => {
         botao.addEventListener('click', async () => {
             const idAbaAlvo = botao.getAttribute('data-aba');
-            botoesNavegacao.forEach(b => b.classList.remove('ativa'));
+            if (!idAbaAlvo) return;
+
+            document.querySelectorAll('.botao-aba').forEach(b => b.classList.remove('ativa'));
+            document.querySelectorAll('.gaveta-item').forEach(b => b.classList.remove('ativa'));
             secoesAba.forEach(s => s.classList.remove('ativa'));
 
-            botao.classList.add('ativa');
+            document.querySelectorAll(`[data-aba="${idAbaAlvo}"]`).forEach(el => el.classList.add('ativa'));
+
             const secaoAlvo = document.getElementById(idAbaAlvo);
             if (secaoAlvo) secaoAlvo.classList.add('ativa');
+
+            fecharGaveta();
 
             if (aoMudarAba) await aoMudarAba(idAbaAlvo);
         });
@@ -58,6 +84,7 @@ async function inicializarSistemaCompleto() {
 
         const ucComprarEstoque = new ComprarEstoque(repoProdutos);
         const ucRegistrarVenda = new RegistrarVenda(repoProdutos, repoClientes, repoVendas);
+        const ucEstornarVenda = new EstornarVenda(repoVendas, repoProdutos, repoClientes);
         const ucGerarCobranca = new GerarCobrancaMensal(repoVendas);
         const ucRegistrarPagamento = new RegistrarPagamento(repoClientes);
         const ucRegistrarPerda = new RegistrarPerda(repoProdutos, repoPerdas);
@@ -70,6 +97,7 @@ async function inicializarSistemaCompleto() {
         const ucPerfilClientes = new ObterPerfilClientes(repoClientes, repoVendas, repoPerdas);
 
         let ctrlVendas = null;
+        let ctrlHistorico = null;
         let ctrlClientes = null;
         let ctrlCobranca = null;
         let ctrlRelatorios = null;
@@ -78,6 +106,7 @@ async function inicializarSistemaCompleto() {
         const atualizarTudo = async () => {
             await ctrlEstoque.atualizarTela();
             if (ctrlVendas) await ctrlVendas.atualizarTela();
+            if (ctrlHistorico) await ctrlHistorico.atualizarTela();
             if (ctrlClientes) await ctrlClientes.atualizarTela();
             if (ctrlCobranca) await ctrlCobranca.atualizarTela();
             if (ctrlRelatorios) await ctrlRelatorios.atualizarTela();
@@ -89,6 +118,22 @@ async function inicializarSistemaCompleto() {
 
         const ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque, atualizarTudo);
         ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
+
+        // Ação de correção: Estorna a venda e já preenche o carrinho na tela de Vendas!
+        const aoCorrigirVenda = async (dadosRelancamento) => {
+            // Ativa a aba de vendas
+            document.querySelectorAll('.botao-aba').forEach(b => b.classList.remove('ativa'));
+            document.querySelectorAll('.gaveta-item').forEach(b => b.classList.remove('ativa'));
+            document.querySelectorAll('.secao-aba').forEach(s => s.classList.remove('ativa'));
+
+            document.querySelectorAll('[data-aba="aba-vendas"]').forEach(el => el.classList.add('ativa'));
+            document.getElementById('aba-vendas')?.classList.add('ativa');
+
+            await ctrlVendas.atualizarTela();
+            ctrlVendas.carregarVendaParaCorrecao(dadosRelancamento);
+        };
+
+        ctrlHistorico = new ControladorHistoricoVendas(repoVendas, repoClientes, ucEstornarVenda, aoCorrigirVenda, atualizarTudo);
         ctrlClientes = new ControladorClientes(repoClientes, atualizarTudo);
         ctrlCobranca = new ControladorCobranca(repoClientes, ucGerarCobranca, ucRegistrarPagamento, atualizarTudo);
         ctrlRelatorios = new ControladorRelatorios(ucBalanco, ucRegistrarPerda, repoProdutos, atualizarTudo);
@@ -102,13 +147,15 @@ async function inicializarSistemaCompleto() {
 
         await ctrlEstoque.inicializar();
         await ctrlVendas.inicializar();
+        await ctrlHistorico.inicializar();
         await ctrlClientes.inicializar();
         await ctrlCobranca.inicializar();
         await ctrlRelatorios.inicializar();
         await ctrlGestao.inicializar();
 
-        configurarNavegacaoAbas(async (idAba) => {
+        configurarNavegacaoHibrida(async (idAba) => {
             if (idAba === 'aba-vendas') await ctrlVendas.atualizarTela();
+            if (idAba === 'aba-historico') await ctrlHistorico.atualizarTela();
             if (idAba === 'aba-estoque') await ctrlEstoque.atualizarTela();
             if (idAba === 'aba-clientes') await ctrlClientes.atualizarTela();
             if (idAba === 'aba-cobranca') await ctrlCobranca.atualizarTela();
@@ -117,7 +164,6 @@ async function inicializarSistemaCompleto() {
             if (idAba === 'aba-catalogo') await ctrlCatalogo.atualizarTela();
         });
 
-        // Botão de Logout Seguro
         document.getElementById('btn-sair-sistema')?.addEventListener('click', async () => {
             if (confirm("Deseja sair do sistema?")) {
                 await AutenticacaoServico.sair();
@@ -130,7 +176,6 @@ async function inicializarSistemaCompleto() {
     }
 }
 
-// GUARDA DE SEGURANÇA (Verifica se está logado antes de carregar o app)
 async function verificarSeguranca() {
     const telaLogin = document.getElementById('tela-login-bloqueio');
     const appAutenticada = document.getElementById('aplicacao-autenticada');
@@ -140,7 +185,6 @@ async function verificarSeguranca() {
     const usuario = await AutenticacaoServico.obterUsuarioAtual();
 
     if (!usuario) {
-        // Bloqueado: Exibe a tela de login
         telaLogin.style.display = 'flex';
         appAutenticada.style.display = 'none';
 
@@ -168,7 +212,6 @@ async function verificarSeguranca() {
             }
         });
     } else {
-        // Usuário já autenticado: Entra direto!
         telaLogin.style.display = 'none';
         appAutenticada.style.display = 'block';
         await inicializarSistemaCompleto();

@@ -14,11 +14,10 @@ body {
     min-height: 100vh;
 }
 
-/* Cabeçalho Fixo */
 .cabecalho-principal {
     background-color: var(--cor-primaria);
     color: #FFFFFF;
-    padding: var(--espacamento-medio);
+    padding: 12px var(--espacamento-medio);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -28,28 +27,40 @@ body {
     align-items: center;
 }
 
+.btn-icone-hamburguer {
+    background: none;
+    border: none;
+    color: #FFFFFF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .cabecalho-titulo {
     font-size: 1.1rem;
     font-weight: 700;
     letter-spacing: 0.5px;
+    line-height: 1.2;
 }
 
 .cabecalho-subtitulo {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--cor-secundaria);
+    display: block;
 }
 
-/* Área de Conteúdo das Telas */
 .conteudo-aplicacao {
     flex: 1;
     padding: var(--espacamento-medio);
-    padding-bottom: 80px; /* Evita que a barra inferior cubra o conteúdo */
-    max-width: 600px;     /* Mantém largura confortável mesmo em tablets */
+    padding-bottom: 85px;
+    max-width: 600px;
     margin: 0 auto;
     width: 100%;
 }
 
-/* Controle de exibição das Abas */
 .secao-aba {
     display: none;
 }
@@ -64,7 +75,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Barra de Navegação Inferior (Estilo App Mobile) */
+/* BARRA DE NAVEGAÇÃO INFERIOR HÍBRIDA (3 BOTÕES AMPLOS) */
 .barra-navegacao {
     position: fixed;
     bottom: 0;
@@ -77,6 +88,7 @@ body {
     justify-content: space-around;
     align-items: center;
     z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
 .botao-aba {
@@ -87,19 +99,125 @@ body {
     align-items: center;
     justify-content: center;
     color: var(--cor-texto-suave);
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     flex: 1;
     height: 100%;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color 0.15s ease, transform 0.1s ease;
+}
+
+.botao-aba:active {
+    transform: scale(0.95);
 }
 
 .botao-aba .icone-aba {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     margin-bottom: 2px;
 }
 
 .botao-aba.ativa {
     color: var(--cor-secundaria);
+}
+
+/* GAVETA LATERAL (DRAWER MENU) */
+.gaveta-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.gaveta-overlay.visivel {
+    display: block;
+    opacity: 1;
+}
+
+.gaveta-lateral {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -290px;
+    width: 280px;
+    background: #FFFFFF;
+    z-index: 2001;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+}
+
+.gaveta-lateral.aberta {
+    transform: translateX(290px);
+}
+
+.gaveta-cabecalho {
+    background: linear-gradient(135deg, var(--cor-primaria), #160a05);
+    padding: 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-fechar-gaveta {
+    background: none;
+    border: none;
+    color: #FFF;
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.gaveta-corpo {
+    padding: 12px 0;
+    flex: 1;
+}
+
+.gaveta-grupo-titulo {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 800;
+    color: var(--cor-texto-suave);
+    padding: 14px 20px 6px 20px;
+}
+
+.gaveta-item {
+    width: 100%;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gaveta-item:active {
+    background-color: var(--cor-secundaria-leve);
+}
+
+.gaveta-item.ativa {
+    background-color: var(--cor-secundaria-leve);
+    color: var(--cor-primaria);
+    font-weight: 800;
+    border-left: 4px solid var(--cor-secundaria);
+}
+
+.gaveta-icone {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
 }

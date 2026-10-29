@@ -4,18 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cacau Gestão</title>
-    
-    <!-- Folhas de Estilo -->
     <link rel="stylesheet" href="estilos/variaveis.css">
     <link rel="stylesheet" href="estilos/estrutura.css">
     <link rel="stylesheet" href="estilos/componentes.css">
-    
-    <!-- Biblioteca Page-Flip para a Revista Interativa -->
     <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
 </head>
 <body>
 
-    <!-- 1. TELA DE LOGIN BLINDADA (Exibida quando não autenticado) -->
+    <!-- TELA DE LOGIN BLOQUEANTE -->
     <div id="tela-login-bloqueio" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1c0e07, #2d180f); z-index: 9999; padding: 24px; align-items: center; justify-content: center;">
         <div class="cartao" style="width: 100%; max-width: 380px; padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -23,18 +19,15 @@
                 <h2 style="color: var(--cor-primaria); font-size: 1.4rem;">Cacau Gestão</h2>
                 <p style="font-size: 0.8rem; color: var(--cor-texto-suave);">Acesso Restrito & Seguro</p>
             </div>
-
             <form id="form-login-seguro">
                 <div class="grupo-campo">
                     <label class="rotulo-campo">E-mail</label>
                     <input type="email" id="login-email" class="campo-entrada" placeholder="seu-email@gmail.com" required autocomplete="username">
                 </div>
-
                 <div class="grupo-campo">
                     <label class="rotulo-campo">Senha</label>
                     <input type="password" id="login-senha" class="campo-entrada" placeholder="••••••••" required autocomplete="current-password">
                 </div>
-
                 <button type="submit" id="btn-entrar-login" class="botao botao-primario botao-bloco" style="height: 48px; margin-top: 10px;">
                     Entrar no Sistema
                 </button>
@@ -43,13 +36,74 @@
         </div>
     </div>
 
-    <!-- 2. APLICAÇÃO PRINCIPAL (Só renderiza após autenticação) -->
+    <!-- APLICAÇÃO PRINCIPAL -->
     <div id="aplicacao-autenticada" style="display: none;">
-        <!-- Topo -->
+
+        <!-- OVERLAY E GAVETA LATERAL (DRAWER) -->
+        <div id="menu-gaveta-overlay" class="gaveta-overlay"></div>
+        <aside id="menu-gaveta-lateral" class="gaveta-lateral">
+            <div class="gaveta-cabecalho">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.6rem;">🍫</span>
+                    <div>
+                        <h3 style="font-size: 1rem; color: #FFF; margin: 0;">Cacau Gestão</h3>
+                        <span style="font-size: 0.7rem; color: var(--cor-secundaria);">Menu Principal</span>
+                    </div>
+                </div>
+                <button id="btn-fechar-gaveta" class="btn-fechar-gaveta" title="Fechar menu">&times;</button>
+            </div>
+
+            <nav class="gaveta-corpo">
+                <div class="gaveta-grupo-titulo">Operação Diária</div>
+                <button class="gaveta-item ativa" data-aba="aba-vendas">
+                    <span class="gaveta-icone">🛒</span>
+                    <span>Registrar Vendas</span>
+                </button>
+                <button class="gaveta-item" data-aba="aba-historico">
+                    <span class="gaveta-icone">📜</span>
+                    <span>Histórico de Vendas</span>
+                </button>
+                <button class="gaveta-item" data-aba="aba-estoque">
+                    <span class="gaveta-icone">📦</span>
+                    <span>Estoque & Compras</span>
+                </button>
+
+                <div class="gaveta-grupo-titulo">Clientes & Cobrança</div>
+                <button class="gaveta-item" data-aba="aba-clientes">
+                    <span class="gaveta-icone">👥</span>
+                    <span>Clientes & Carteira</span>
+                </button>
+                <button class="gaveta-item" data-aba="aba-cobranca">
+                    <span class="gaveta-icone">💬</span>
+                    <span>Cobrança do Mês</span>
+                </button>
+
+                <div class="gaveta-grupo-titulo">Gestão & Inteligência</div>
+                <button class="gaveta-item" data-aba="aba-relatorios">
+                    <span class="gaveta-icone">📊</span>
+                    <span>Balanço & DRE</span>
+                </button>
+                <button class="gaveta-item" data-aba="aba-gestao">
+                    <span class="gaveta-icone">🎯</span>
+                    <span>Gestão Estratégica</span>
+                </button>
+                <button class="gaveta-item" data-aba="aba-catalogo">
+                    <span class="gaveta-icone">📖</span>
+                    <span>Catálogo Digital</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- CABEÇALHO SUPERIOR -->
         <header class="cabecalho-principal">
-            <div>
-                <h1 class="cabecalho-titulo">Cacau Gestão</h1>
-                <span class="cabecalho-subtitulo">Controle de Vendas & Estoque</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="btn-hamburguer-topo" class="btn-icone-hamburguer" title="Abrir Menu">
+                    ☰
+                </button>
+                <div>
+                    <h1 class="cabecalho-titulo">Cacau Gestão</h1>
+                    <span class="cabecalho-subtitulo">Controle de Vendas & Estoque</span>
+                </div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="indicador-conexao" style="font-size: 0.75rem; color: var(--cor-secundaria);">● Conectado</span>
@@ -59,46 +113,43 @@
             </div>
         </header>
 
-        <!-- Conteúdo por Aba -->
+        <!-- CONTEÚDO DAS SEÇÕES (ABAS) -->
         <main class="conteudo-aplicacao">
             <section id="aba-vendas" class="secao-aba ativa">
                 <h2>Registrar Vendas</h2>
                 <div id="conteudo-vendas">Carregando painel de vendas...</div>
             </section>
-
+            <section id="aba-historico" class="secao-aba">
+                <h2>Histórico de Vendas</h2>
+                <div id="conteudo-historico">Carregando histórico...</div>
+            </section>
             <section id="aba-estoque" class="secao-aba">
                 <h2>Estoque e Compras</h2>
                 <div id="conteudo-estoque">Carregando controle de estoque...</div>
             </section>
-
             <section id="aba-clientes" class="secao-aba">
                 <h2>Clientes e Débitos</h2>
                 <div id="conteudo-clientes">Carregando carteira de clientes...</div>
             </section>
-
             <section id="aba-cobranca" class="secao-aba">
                 <h2>Cobrança do Mês</h2>
                 <div id="conteudo-cobranca">Carregando mensagens de cobrança...</div>
             </section>
-
             <section id="aba-relatorios" class="secao-aba">
                 <h2>Balanço e Perdas</h2>
                 <div id="conteudo-relatorios">Carregando balanço financeiro...</div>
             </section>
-
             <section id="aba-gestao" class="secao-aba">
                 <h2>Inteligência & Gestão</h2>
                 <div id="conteudo-gestao">Carregando indicadores estratégicos...</div>
             </section>
-
-            <!-- 7ª ABA (NOVA): REVISTA / CATÁLOGO INTERATIVO -->
             <section id="aba-catalogo" class="secao-aba">
                 <h2>Catálogo Digital Cacau Show</h2>
                 <div id="conteudo-catalogo">Carregando revista digital...</div>
             </section>
         </main>
 
-        <!-- Barra Inferior de Navegação (7 Abas) -->
+        <!-- BARRA INFERIOR HÍBRIDA -->
         <nav class="barra-navegacao">
             <button class="botao-aba ativa" data-aba="aba-vendas">
                 <span class="icone-aba">🛒</span>
@@ -108,30 +159,13 @@
                 <span class="icone-aba">📦</span>
                 <span>Estoque</span>
             </button>
-            <button class="botao-aba" data-aba="aba-clientes">
-                <span class="icone-aba">👥</span>
-                <span>Clientes</span>
-            </button>
-            <button class="botao-aba" data-aba="aba-cobranca">
-                <span class="icone-aba">💬</span>
-                <span>Cobrança</span>
-            </button>
-            <button class="botao-aba" data-aba="aba-relatorios">
-                <span class="icone-aba">📊</span>
-                <span>Balanço</span>
-            </button>
-            <button class="botao-aba" data-aba="aba-gestao">
-                <span class="icone-aba">🎯</span>
-                <span>Gestão</span>
-            </button>
-            <button class="botao-aba" data-aba="aba-catalogo">
-                <span class="icone-aba">📖</span>
-                <span>Catálogo</span>
+            <button class="botao-aba" id="btn-menu-rodape">
+                <span class="icone-aba">☰</span>
+                <span>Menu</span>
             </button>
         </nav>
     </div>
 
-    <!-- Módulo Principal -->
     <script type="module" src="codigo/principal.js"></script>
 </body>
 </html>

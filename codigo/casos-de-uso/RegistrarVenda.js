@@ -1,30 +1,13 @@
- import { Venda } from '../dominio/Venda.js';
+import { Venda } from '../dominio/Venda.js';
 
-/**
- * CASO DE USO: RegistrarVenda
- * Orquestra a baixa no estoque por PEPS (FIFO), aceita preço personalizado/desconto e atualiza fiado.
- */
 export class RegistrarVenda {
-    /**
-     * @param {import('../repositorios/RepositorioProdutos.js').RepositorioProdutos} repositorioProdutos
-     * @param {import('../repositorios/RepositorioClientes.js').RepositorioClientes} repositorioClientes
-     * @param {import('../repositorios/RepositorioVendas.js').RepositorioVendas} repositorioVendas
-     */
     constructor(repositorioProdutos, repositorioClientes, repositorioVendas) {
         this.repositorioProdutos = repositorioProdutos;
         this.repositorioClientes = repositorioClientes;
         this.repositorioVendas = repositorioVendas;
     }
 
-    /**
-     * @param {Object} dadosVenda
-     * @param {string|null} dadosVenda.clienteId
-     * @param {Array<{produtoId: string, quantidade: number, precoVendaPersonalizado?: number}>} dadosVenda.itens
-     * @param {string} dadosVenda.tipoPagamento
-     * @param {string} [dadosVenda.origem]
-     * @param {string} [dadosVenda.observacao]
-     */
-    async executar({ clienteId, itens, tipoPagamento = 'A_PRAZO', origem = 'MANUAL', observacao = '' }) {
+    async executar({ clienteId, itens, tipoPagamento = 'A_PRAZO', origem = 'MANUAL', observacao = '', dataHora = null }) {
         if (!itens || itens.length === 0) {
             throw new Error("A venda precisa ter pelo menos um chocolate selecionado.");
         }
@@ -32,7 +15,6 @@ export class RegistrarVenda {
         const produtosCatalogo = await this.repositorioProdutos.obterTodosComLotes();
         const mapaProdutos = new Map(produtosCatalogo.map(p => [p.id, p]));
 
-        // 1. Validação prévia de estoque
         for (const itemPedido of itens) {
             const produto = mapaProdutos.get(itemPedido.produtoId);
             if (!produto) {
@@ -50,13 +32,11 @@ export class RegistrarVenda {
         const itensVendaProcessados = [];
         const lotesParaAtualizarNoBanco = [];
 
-        // 2. Processamento PEPS (Baixa com preço customizado se houver)
         for (const itemPedido of itens) {
             const produto = mapaProdutos.get(itemPedido.produtoId);
             let quantidadeRestanteParaAbater = Number(itemPedido.quantidade);
             const lotesOrdenados = produto.obterLotesParaVenda();
 
-            // Determina o preço de venda: customizado/com desconto ou o padrão de tabela
             const precoVendaFinal = (itemPedido.precoVendaPersonalizado !== undefined && Number(itemPedido.precoVendaPersonalizado) > 0)
                 ? Number(Number(itemPedido.precoVendaPersonalizado).toFixed(2))
                 : produto.precoVenda;
@@ -82,21 +62,19 @@ export class RegistrarVenda {
             }
         }
 
-        // 3. Cria a entidade Venda
         const novaVenda = new Venda({
             clienteId: clienteId || null,
             itens: itensVendaProcessados,
             tipoPagamento: tipoPagamento,
             origem: origem,
-            observacao: observacao
+            observacao: observacao,
+            dataHora: dataHora || new Date().toISOString()
         });
 
-        // 4. Salva lotes abatidos
         for (const lote of lotesParaAtualizarNoBanco) {
             await this.repositorioProdutos.salvarLote(lote);
         }
 
-        // 5. Se for fiado, atualiza o saldo do colega
         let clienteAtualizado = null;
         if (novaVenda.ehFiado()) {
             const clientes = await this.repositorioClientes.obterTodosComHistorico();
@@ -111,7 +89,6 @@ export class RegistrarVenda {
             clienteAtualizado = cliente;
         }
 
-        // 6. Grava a venda no histórico
         await this.repositorioVendas.salvarVenda(novaVenda);
 
         return {
