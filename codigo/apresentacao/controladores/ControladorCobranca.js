@@ -118,7 +118,6 @@ export class ControladorCobranca {
     }
 
     vincularAcoesFaturas(devedoresFiltrados) {
-        // 1. COPIAR MENSAGEM DE TEXTO / ABRIR WHATSAPP
         document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!this.chavePix) {
@@ -129,80 +128,72 @@ export class ControladorCobranca {
                 const cliente = devedoresFiltrados.find(c => c.id === clienteId);
                 if (!cliente) return;
 
-                const resultado = await this.casoDeUsoGerarCobranca.executar({
-                    cliente: cliente,
-                    chavePix: this.chavePix,
-                    linkCatalogo: this.linkCatalogo
-                });
-
-                if (resultado.canal === 'WHATSAPP') {
-                    // Tenta já deixar o QR Code no clipboard antes de abrir o WhatsApp
-                    try {
-                        await GeradorPixClipboard.copiarQrCodeParaClipboard({
-                            chavePix: this.chavePix,
-                            valor: resultado.valorPendente
-                        });
-                    } catch (err) {
-                        console.warn("Aviso QR Code:", err);
-                    }
-                    window.open(resultado.linkWhatsApp, '_blank');
-                } else {
-                    try {
-                        await navigator.clipboard.writeText(resultado.mensagemTexto);
-                        const textoOriginal = btn.innerText;
-                        btn.innerText = '✅ Texto Copiado!';
-                        setTimeout(() => { btn.innerText = textoOriginal; }, 2000);
-
-                        const abrirTeams = confirm(
-                            `📋 Mensagem para ${resultado.primeiroNome} copiada!\n\n` +
-                            `Dica: Após colar o texto no Teams, clique no botão "🖼️ QR Code" para copiar a imagem do Pix e colar com Ctrl+V.\n\n` +
-                            `Deseja abrir o Teams no chat de "${resultado.primeiroNome}" agora?`
-                        );
-                        if (abrirTeams) {
-                            window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
-                        }
-                    } catch (e) {
-                        prompt("Copie a mensagem abaixo para enviar no Teams:", resultado.mensagemTexto);
-                    }
-                }
-            });
-        });
-
-        // 2. COPIAR SOMENTE A IMAGEM DO QR CODE PARA O CLIPBOARD
-        document.querySelectorAll('.btn-copiar-qrcode').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!this.chavePix) {
-                    return alert("Por favor, preencha sua Chave Pix no topo da página antes de gerar o QR Code!");
-                }
-
-                const clienteId = btn.getAttribute('data-cliente-id');
-                const cliente = devedoresFiltrados.find(c => c.id === clienteId);
-                if (!cliente) return;
-
                 const textoOriginal = btn.innerText;
                 btn.disabled = true;
-                btn.innerText = 'Gerando...';
+                btn.innerText = "Preparando...";
 
                 try {
-                    await GeradorPixClipboard.copiarQrCodeParaClipboard({
+                    const resultado = await this.casoDeUsoGerarCobranca.executar({
+                        cliente: cliente,
                         chavePix: this.chavePix,
-                        valor: Number(cliente.saldoDevedor || 0)
+                        linkCatalogo: this.linkCatalogo
                     });
 
-                    btn.innerText = '✅ QR Copiado!';
+                    // Gera a imagem do QR Code em Base64
+                    const qrCodeDataUrl = await GeradorPixClipboard.gerarQrCodeDataUrl(resultado.payloadPix);
+
+                    // Monta a versão HTML com o QR Code pronto dentro da mensagem
+                    const textoHtml = `
+                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #222; line-height: 1.5;">
+                            <p>Olá, <strong>${resultado.primeiroNome}</strong>! Tudo bem? 😊🍫</p>
+                            <p>Segue o fechamento dos seus chocolates deste mês:</p>
+                            ${resultado.linhasExtratoHtml}
+                            ${resultado.totalPagamentos > 0 ? `<p>Subtotal: R$ ${resultado.subtotalConsumido.toFixed(2)}<br>(-) Pagos: R$ ${resultado.totalPagamentos.toFixed(2)}</p>` : ''}
+                            <p style="font-size: 16px;"><strong>Total a pagar: R$ ${resultado.valorPendente.toFixed(2)}</strong></p>
+                            <p>💳 <strong>Chave Pix:</strong> ${this.chavePix}</p>
+                            <p style="margin: 10px 0;">
+                                <img src="${qrCodeDataUrl}" alt="QR Code Pix" width="220" height="220" style="display: block; border-radius: 8px; border: 1px solid #ddd;" />
+                            </p>
+                            <p>📱 <strong>Pix Copia e Cola:</strong><br><code style="background: #f4f4f4; padding: 4px 6px; border-radius: 4px; font-size: 12px; word-break: break-all;">${resultado.payloadPix}</code></p>
+                            ${this.linkCatalogo ? `<p>📖 <strong>Catálogo Digital:</strong> <a href="${this.linkCatalogo}">${this.linkCatalogo}</a></p>` : ''}
+                            <p>Qualquer dúvida, estou à disposição. Obrigado! 🙌</p>
+                        </div>
+                    `;
+
+                    // Copia Texto + QR Code juntos para o Clipboard
+                    await GeradorPixClipboard.copiarMensagemComQrCode({
+                        textoPlano: resultado.mensagemTexto,
+                        textoHtml: textoHtml
+                    });
+
+                    btn.innerText = "✅ Copiado!";
                     setTimeout(() => {
                         btn.innerText = textoOriginal;
                         btn.disabled = false;
-                    }, 2200);
+                    }, 2500);
+
+                    if (resultado.canal === 'WHATSAPP') {
+                        window.open(resultado.linkWhatsApp, '_blank');
+                    } else {
+                        const abrir = confirm(
+                            `🎉 TUDO PRONTO!\n\n` +
+                            `A mensagem com o extrato de ${resultado.primeiroNome} E a imagem do QR Code já estão na Área de Transferência.\n\n` +
+                            `Basta ir ao chat do Teams e pressionar Ctrl + V para colar a mensagem com o QR Code pronto!\n\n` +
+                            `Deseja abrir o chat de "${resultado.primeiroNome}" no Teams agora?`
+                        );
+                        if (abrir) {
+                            window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
+                        }
+                    }
                 } catch (erro) {
-                    alert(`Não foi possível copiar o QR Code: ${erro.message}`);
+                    alert(`Erro ao preparar cobrança: ${erro.message}`);
                     btn.innerText = textoOriginal;
                     btn.disabled = false;
                 }
             });
         });
 
-        // 3. ABRIR MODAL BAIXAR PIX
+        // ABRIR MODAL BAIXAR PIX
         document.querySelectorAll('.btn-quitar-debito').forEach(btn => {
             btn.addEventListener('click', () => {
                 const clienteId = btn.getAttribute('data-cliente-id');

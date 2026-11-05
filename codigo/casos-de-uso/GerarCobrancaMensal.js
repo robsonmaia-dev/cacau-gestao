@@ -1,3 +1,5 @@
+import { GeradorPixClipboard } from '../utilitarios/GeradorPixClipboard.js';
+
 export class GerarCobrancaMensal {
     constructor(repositorioVendas) {
         this.repositorioVendas = repositorioVendas;
@@ -27,47 +29,64 @@ export class GerarCobrancaMensal {
         });
 
         let linhasExtrato = "";
+        let linhasExtratoHtml = "";
+
         if (mapaItensConsumidos.size > 0) {
             mapaItensConsumidos.forEach((info, nomeProduto) => {
                 linhasExtrato += `• ${info.quantidade}x ${nomeProduto} (R$ ${info.total.toFixed(2)})\n`;
+                linhasExtratoHtml += `<li><strong>${info.quantidade}x</strong> ${nomeProduto} — R$ ${info.total.toFixed(2)}</li>`;
             });
+            linhasExtratoHtml = `<ul style="margin: 8px 0; padding-left: 20px;">${linhasExtratoHtml}</ul>`;
         } else {
             linhasExtrato = `• Saldo pendente acumulado anterior\n`;
+            linhasExtratoHtml = `<p>• Saldo pendente acumulado anterior</p>`;
         }
 
         const saldoFormatado = Number(cliente.saldoDevedor || 0).toFixed(2);
         const totalPagamentos = (cliente.historicoPagamentos || []).reduce((soma, p) => soma + p.valor, 0);
 
-        // EXTRAÇÃO DO PRIMEIRO NOME:
+        // Apenas o primeiro nome
         const primeiroNome = (cliente.nome || '').trim().split(/\s+/)[0] || 'Colega';
 
-        let mensagem = `Olá, ${primeiroNome}! Tudo bem? 😊🍫\n\n`;
-        mensagem += `Segue o fechamento dos seus chocolates deste mês:\n\n`;
-        mensagem += `${linhasExtrato}\n`;
+        // Gera o código Pix Copia e Cola com o valor exato da fatura
+        const payloadPix = GeradorPixClipboard.gerarPayloadPix({
+            chavePix: chavePix,
+            valor: Number(saldoFormatado)
+        });
+
+        // 1. Mensagem em Texto Puro (WhatsApp e apps legados)
+        let mensagemTexto = `Olá, ${primeiroNome}! Tudo bem? 😊🍫\n\n`;
+        mensagemTexto += `Segue o fechamento dos seus chocolates deste mês:\n\n`;
+        mensagemTexto += `${linhasExtrato}\n`;
 
         if (totalPagamentos > 0) {
-            mensagem += `Subtotal consumido: R$ ${subtotalConsumido.toFixed(2)}\n`;
-            mensagem += `(-) Pagamentos já realizados: R$ ${totalPagamentos.toFixed(2)}\n`;
+            mensagemTexto += `Subtotal consumido: R$ ${subtotalConsumido.toFixed(2)}\n`;
+            mensagemTexto += `(-) Pagamentos já realizados: R$ ${totalPagamentos.toFixed(2)}\n`;
         }
 
-        mensagem += `*Total a pagar: R$ ${saldoFormatado}*\n\n`;
-        mensagem += `💳 *Chave Pix:* ${chavePix}\n`;
+        mensagemTexto += `*Total a pagar: R$ ${saldoFormatado}*\n\n`;
+        mensagemTexto += `💳 *Chave Pix:* ${chavePix}\n\n`;
+        mensagemTexto += `📱 *Pix Copia e Cola:*\n${payloadPix}\n`;
 
         if (linkCatalogo && linkCatalogo.trim() !== '') {
-            mensagem += `\n📖 Já estou montando os próximos pedidos da Cacau Show! Dá uma olhada no catálogo novo no link abaixo:\n${linkCatalogo.trim()}\n`;
+            mensagemTexto += `\n📖 Já estou montando os próximos pedidos da Cacau Show! Catálogo novo no link:\n${linkCatalogo.trim()}\n`;
         }
 
-        mensagem += `\nQualquer dúvida, estou à disposição. Obrigado! 🙌`;
+        mensagemTexto += `\nQualquer dúvida, estou à disposição. Obrigado! 🙌`;
 
         return {
             sucesso: true,
             cliente: cliente,
             primeiroNome: primeiroNome,
-            mensagemTexto: mensagem,
             valorPendente: Number(saldoFormatado),
+            payloadPix: payloadPix,
+            linhasExtratoHtml: linhasExtratoHtml,
+            subtotalConsumido: subtotalConsumido,
+            totalPagamentos: totalPagamentos,
+            mensagemTexto: mensagemTexto,
             canal: cliente.canalPreferencial,
             linkWhatsApp: cliente.canalPreferencial === 'WHATSAPP'
-                ? `https://wa.me/${cliente.obterTelefoneLimpoWhatsApp()}?text=${encodeURIComponent(mensagem)}`
+                ? `https://wa.me/${cliente.obterTelefoneLimpoWhatsApp()}?text=${encodeURIComponent(mensagemTexto)}`
                 : null
         };
     }

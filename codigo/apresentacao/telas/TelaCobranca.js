@@ -132,15 +132,12 @@ export class TelaCobranca {
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
-                    <button class="botao botao-secundario btn-gerar-cobranca" data-cliente-id="${cli.id}" style="flex: 1.5; height: 38px; font-size: 0.78rem; padding: 0 8px;">
-                        ${cli.canalPreferencial === 'WHATSAPP' ? '📲 WhatsApp' : '📋 Texto'}
+                <div style="display: flex; gap: 8px; width: 100%; margin-top: 4px;">
+                    <button class="botao botao-secundario btn-gerar-cobranca" data-cliente-id="${cli.id}" style="flex: 2; height: 38px; font-size: 0.82rem;">
+                        ${cli.canalPreferencial === 'WHATSAPP' ? '📲 Abrir WhatsApp' : '📋 Copiar Mensagem + QR Code'}
                     </button>
-                    <button class="botao botao-primario btn-copiar-qrcode" data-cliente-id="${cli.id}" style="flex: 1.3; height: 38px; font-size: 0.78rem; padding: 0 8px;" title="Copia a imagem do QR Code Pix para colar no chat">
-                        🖼️ QR Code
-                    </button>
-                    <button class="botao botao-sucesso btn-quitar-debito" data-cliente-id="${cli.id}" data-cliente-nome="${cli.nome}" data-saldo="${cli.saldoDevedor}" style="flex: 1.2; height: 38px; font-size: 0.78rem; padding: 0 8px;">
-                        💰 Baixar
+                    <button class="botao botao-sucesso btn-quitar-debito" data-cliente-id="${cli.id}" data-cliente-nome="${cli.nome}" data-saldo="${cli.saldoDevedor}" style="flex: 1; height: 38px; font-size: 0.82rem;">
+                        💰 Baixar Pix
                     </button>
                 </div>
             </div>
