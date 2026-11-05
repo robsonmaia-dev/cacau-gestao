@@ -3,7 +3,6 @@ export class TelaCobranca {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
     }
 
-    // Renderiza a estrutura completa (configuração, total geral, filtros e casca da lista)
     static renderizarEstrutura(container, { totalGeral, totalDevedores, chavePix = '', linkCatalogo = '', filtros = {} }) {
         container.innerHTML = `
             <!-- Card de Configuração do Pix e Catálogo -->
@@ -30,7 +29,7 @@ export class TelaCobranca {
                 </div>
             </div>
 
-            <!-- PAINEL DE FILTROS DA COBRANÇA (FIXO PARA DIGITAÇÃO CONTÍNUA) -->
+            <!-- PAINEL DE FILTROS DA COBRANÇA -->
             <div class="cartao" style="background: #FAF7F5; padding: 12px; margin-bottom: 12px;">
                 <div class="cartao-cabecalho" style="margin-bottom: 8px;">
                     <span class="cartao-titulo" style="font-size: 0.95rem;">🔍 Filtros de Cobrança</span>
@@ -69,7 +68,7 @@ export class TelaCobranca {
                 <div class="lista-linhas" id="lista-faturas-cobranca"></div>
             </div>
 
-            <!-- MODAL: BAIXAR PAGAMENTO (TOTAL OU PARCIAL) -->
+            <!-- MODAL: BAIXAR PAGAMENTO -->
             <div id="modal-pagamento-cobranca" class="fundo-modal">
                 <div class="janela-modal">
                     <div class="modal-cabecalho">
@@ -97,7 +96,6 @@ export class TelaCobranca {
         `;
     }
 
-    // Atualiza apenas os cards filtrados sem perder o foco do teclado
     static atualizarLista(devedoresFiltrados = []) {
         const containerLista = document.getElementById('lista-faturas-cobranca');
         const contador = document.getElementById('contador-faturas-cobranca');
@@ -134,12 +132,15 @@ export class TelaCobranca {
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 8px; width: 100%; margin-top: 4px;">
-                    <button class="botao botao-secundario btn-gerar-cobranca" data-cliente-id="${cli.id}" style="flex: 2; height: 38px; font-size: 0.8rem;">
-                        ${cli.canalPreferencial === 'WHATSAPP' ? '📲 Abrir WhatsApp' : '📋 Copiar p/ Teams'}
+                <div style="display: flex; gap: 6px; width: 100%; margin-top: 4px;">
+                    <button class="botao botao-secundario btn-gerar-cobranca" data-cliente-id="${cli.id}" style="flex: 1.5; height: 38px; font-size: 0.78rem; padding: 0 8px;">
+                        ${cli.canalPreferencial === 'WHATSAPP' ? '📲 WhatsApp' : '📋 Texto'}
                     </button>
-                    <button class="botao botao-sucesso btn-quitar-debito" data-cliente-id="${cli.id}" data-cliente-nome="${cli.nome}" data-saldo="${cli.saldoDevedor}" style="flex: 1.2; height: 38px; font-size: 0.8rem;">
-                        💰 Baixar Pix
+                    <button class="botao botao-primario btn-copiar-qrcode" data-cliente-id="${cli.id}" style="flex: 1.3; height: 38px; font-size: 0.78rem; padding: 0 8px;" title="Copia a imagem do QR Code Pix para colar no chat">
+                        🖼️ QR Code
+                    </button>
+                    <button class="botao botao-sucesso btn-quitar-debito" data-cliente-id="${cli.id}" data-cliente-nome="${cli.nome}" data-saldo="${cli.saldoDevedor}" style="flex: 1.2; height: 38px; font-size: 0.78rem; padding: 0 8px;">
+                        💰 Baixar
                     </button>
                 </div>
             </div>

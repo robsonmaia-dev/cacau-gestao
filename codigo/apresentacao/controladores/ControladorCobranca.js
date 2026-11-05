@@ -1,8 +1,6 @@
 import { TelaCobranca } from '../telas/TelaCobranca.js';
-import { TelaCobranca } from '../telas/TelaCobranca.js';
 import { GeradorPixClipboard } from '../../utilitarios/GeradorPixClipboard.js';
 
-// Normalizador para busca sem acentos
 function normalizar(texto) {
     return (texto || '')
         .toLowerCase()
@@ -43,7 +41,6 @@ export class ControladorCobranca {
 
             const totalGeral = this.devedores.reduce((soma, c) => soma + Number(c.saldoDevedor || 0), 0);
 
-            // Renderiza estrutura estática preservando estado dos filtros
             TelaCobranca.renderizarEstrutura(this.container, {
                 totalGeral,
                 totalDevedores: this.devedores.length,
@@ -64,14 +61,12 @@ export class ControladorCobranca {
         const termoBusca = normalizar(this.filtros.termo);
 
         let filtrados = this.devedores.filter(cli => {
-            // 1. Busca textual (Nome ou Contato sem acentos)
             if (termoBusca) {
                 const bateuNome = normalizar(cli.nome).includes(termoBusca);
                 const bateuContato = normalizar(cli.contato).includes(termoBusca);
                 if (!bateuNome && !bateuContato) return false;
             }
 
-            // 2. Filtro de Canal
             if (this.filtros.canal !== 'TODOS' && cli.canalPreferencial !== this.filtros.canal) {
                 return false;
             }
@@ -79,7 +74,6 @@ export class ControladorCobranca {
             return true;
         });
 
-        // 3. Ordenação Inteligente
         if (this.filtros.ordem === 'MAIOR_VALOR') {
             filtrados.sort((a, b) => Number(b.saldoDevedor) - Number(a.saldoDevedor));
         } else if (this.filtros.ordem === 'MENOR_VALOR') {
@@ -88,7 +82,6 @@ export class ControladorCobranca {
             filtrados.sort((a, b) => a.nome.localeCompare(b.nome));
         }
 
-        // Atualiza apenas os cards de faturas
         TelaCobranca.atualizarLista(filtrados);
         this.vincularAcoesFaturas(filtrados);
     }
@@ -125,7 +118,7 @@ export class ControladorCobranca {
     }
 
     vincularAcoesFaturas(devedoresFiltrados) {
-        // DISPARAR MENSAGEM DE COBRANÇA
+        // 1. COPIAR MENSAGEM DE TEXTO / ABRIR WHATSAPP
         document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
             btn.addEventListener('click', async () => {
                 if (!this.chavePix) {
@@ -143,61 +136,27 @@ export class ControladorCobranca {
                 });
 
                 if (resultado.canal === 'WHATSAPP') {
-                    // No WhatsApp, abre diretamente a conversa já com a mensagem e o link preenchidos
-                    window.open(resultado.linkWhatsApp, '_blank');
-                } else {
-                    // No Teams: Copia o texto e em seguida copia a imagem do QR Code
+                    // Tenta já deixar o QR Code no clipboard antes de abrir o WhatsApp
                     try {
-                        // 1. Copia a mensagem de texto primeiro ou copia o QR Code diretamente
-                        // Opção recomendada: Copiar a imagem do QR Code para o clipboard
                         await GeradorPixClipboard.copiarQrCodeParaClipboard({
                             chavePix: this.chavePix,
                             valor: resultado.valorPendente
                         });
-
-                        const abrirTeams = confirm(
-                            `🖼️ QR CODE COPIADO COM SUCESSO!\n\n` +
-                            `O QR Code do Pix de R$ ${resultado.valorPendente.toFixed(2)} já está na sua Área de Transferência.\n` +
-                            `Basta abrir o chat do Teams e dar Ctrl+V para colar a imagem!\n\n` +
-                            `Deseja abrir o Teams no chat de "${resultado.primeiroNome}" agora?`
-                        );
-
-                        if (abrirTeams) {
-                            window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
-                        }
-                    } catch (e) {
-                        // Fallback se o navegador restringir a cópia de imagens: copia o texto
-                        await navigator.clipboard.writeText(resultado.mensagemTexto);
-                        alert(`📋 Texto da cobrança copiado para a área de transferência! (Falha ao gerar imagem: ${e.message})`);
+                    } catch (err) {
+                        console.warn("Aviso QR Code:", err);
                     }
-                }
-            });
-        });
-        
-        // DISPARAR MENSAGEM DE COBRANÇA
-        document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!this.chavePix) {
-                    return alert("Por favor, preencha sua Chave Pix no topo da página antes de cobrar!");
-                }
-
-                const clienteId = btn.getAttribute('data-cliente-id');
-                const cliente = devedoresFiltrados.find(c => c.id === clienteId);
-                if (!cliente) return;
-
-                const resultado = await this.casoDeUsoGerarCobranca.executar({
-                    cliente: cliente,
-                    chavePix: this.chavePix,
-                    linkCatalogo: this.linkCatalogo
-                });
-
-                if (resultado.canal === 'WHATSAPP') {
                     window.open(resultado.linkWhatsApp, '_blank');
                 } else {
                     try {
                         await navigator.clipboard.writeText(resultado.mensagemTexto);
+                        const textoOriginal = btn.innerText;
+                        btn.innerText = '✅ Texto Copiado!';
+                        setTimeout(() => { btn.innerText = textoOriginal; }, 2000);
+
                         const abrirTeams = confirm(
-                            `📋 Mensagem copiada com sucesso!\n\nDeseja abrir o Microsoft Teams no chat de "${cliente.nome}" agora?`
+                            `📋 Mensagem para ${resultado.primeiroNome} copiada!\n\n` +
+                            `Dica: Após colar o texto no Teams, clique no botão "🖼️ QR Code" para copiar a imagem do Pix e colar com Ctrl+V.\n\n` +
+                            `Deseja abrir o Teams no chat de "${resultado.primeiroNome}" agora?`
                         );
                         if (abrirTeams) {
                             window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
@@ -209,7 +168,41 @@ export class ControladorCobranca {
             });
         });
 
-        // ABRIR MODAL BAIXAR PIX
+        // 2. COPIAR SOMENTE A IMAGEM DO QR CODE PARA O CLIPBOARD
+        document.querySelectorAll('.btn-copiar-qrcode').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!this.chavePix) {
+                    return alert("Por favor, preencha sua Chave Pix no topo da página antes de gerar o QR Code!");
+                }
+
+                const clienteId = btn.getAttribute('data-cliente-id');
+                const cliente = devedoresFiltrados.find(c => c.id === clienteId);
+                if (!cliente) return;
+
+                const textoOriginal = btn.innerText;
+                btn.disabled = true;
+                btn.innerText = 'Gerando...';
+
+                try {
+                    await GeradorPixClipboard.copiarQrCodeParaClipboard({
+                        chavePix: this.chavePix,
+                        valor: Number(cliente.saldoDevedor || 0)
+                    });
+
+                    btn.innerText = '✅ QR Copiado!';
+                    setTimeout(() => {
+                        btn.innerText = textoOriginal;
+                        btn.disabled = false;
+                    }, 2200);
+                } catch (erro) {
+                    alert(`Não foi possível copiar o QR Code: ${erro.message}`);
+                    btn.innerText = textoOriginal;
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        // 3. ABRIR MODAL BAIXAR PIX
         document.querySelectorAll('.btn-quitar-debito').forEach(btn => {
             btn.addEventListener('click', () => {
                 const clienteId = btn.getAttribute('data-cliente-id');
@@ -244,7 +237,6 @@ export class ControladorCobranca {
             });
         });
 
-        // FORMULÁRIO DE BAIXA COM TRAVA DE DUPLO CLIQUE
         const formPagamento = document.getElementById('form-pagamento-cobranca');
         formPagamento?.addEventListener('submit', async (e) => {
             e.preventDefault();
