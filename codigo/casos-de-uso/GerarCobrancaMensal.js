@@ -35,10 +35,13 @@ export class GerarCobrancaMensal {
             linhasExtrato = `• Saldo pendente acumulado anterior\n`;
         }
 
-        const saldoFormatado = cliente.saldoDevedor.toFixed(2);
+        const saldoFormatado = Number(cliente.saldoDevedor || 0).toFixed(2);
         const totalPagamentos = (cliente.historicoPagamentos || []).reduce((soma, p) => soma + p.valor, 0);
 
-        let mensagem = `Olá, ${cliente.nome}! Tudo bem? 😊🍫\n\n`;
+        // EXTRAÇÃO DO PRIMEIRO NOME:
+        const primeiroNome = (cliente.nome || '').trim().split(/\s+/)[0] || 'Colega';
+
+        let mensagem = `Olá, ${primeiroNome}! Tudo bem? 😊🍫\n\n`;
         mensagem += `Segue o fechamento dos seus chocolates deste mês:\n\n`;
         mensagem += `${linhasExtrato}\n`;
 
@@ -59,7 +62,9 @@ export class GerarCobrancaMensal {
         return {
             sucesso: true,
             cliente: cliente,
+            primeiroNome: primeiroNome,
             mensagemTexto: mensagem,
+            valorPendente: Number(saldoFormatado),
             canal: cliente.canalPreferencial,
             linkWhatsApp: cliente.canalPreferencial === 'WHATSAPP'
                 ? `https://wa.me/${cliente.obterTelefoneLimpoWhatsApp()}?text=${encodeURIComponent(mensagem)}`

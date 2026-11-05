@@ -1,4 +1,6 @@
 import { TelaCobranca } from '../telas/TelaCobranca.js';
+import { TelaCobranca } from '../telas/TelaCobranca.js';
+import { GeradorPixClipboard } from '../../utilitarios/GeradorPixClipboard.js';
 
 // Normalizador para busca sem acentos
 function normalizar(texto) {
@@ -123,6 +125,55 @@ export class ControladorCobranca {
     }
 
     vincularAcoesFaturas(devedoresFiltrados) {
+        // DISPARAR MENSAGEM DE COBRANÇA
+        document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!this.chavePix) {
+                    return alert("Por favor, preencha sua Chave Pix no topo da página antes de cobrar!");
+                }
+
+                const clienteId = btn.getAttribute('data-cliente-id');
+                const cliente = devedoresFiltrados.find(c => c.id === clienteId);
+                if (!cliente) return;
+
+                const resultado = await this.casoDeUsoGerarCobranca.executar({
+                    cliente: cliente,
+                    chavePix: this.chavePix,
+                    linkCatalogo: this.linkCatalogo
+                });
+
+                if (resultado.canal === 'WHATSAPP') {
+                    // No WhatsApp, abre diretamente a conversa já com a mensagem e o link preenchidos
+                    window.open(resultado.linkWhatsApp, '_blank');
+                } else {
+                    // No Teams: Copia o texto e em seguida copia a imagem do QR Code
+                    try {
+                        // 1. Copia a mensagem de texto primeiro ou copia o QR Code diretamente
+                        // Opção recomendada: Copiar a imagem do QR Code para o clipboard
+                        await GeradorPixClipboard.copiarQrCodeParaClipboard({
+                            chavePix: this.chavePix,
+                            valor: resultado.valorPendente
+                        });
+
+                        const abrirTeams = confirm(
+                            `🖼️ QR CODE COPIADO COM SUCESSO!\n\n` +
+                            `O QR Code do Pix de R$ ${resultado.valorPendente.toFixed(2)} já está na sua Área de Transferência.\n` +
+                            `Basta abrir o chat do Teams e dar Ctrl+V para colar a imagem!\n\n` +
+                            `Deseja abrir o Teams no chat de "${resultado.primeiroNome}" agora?`
+                        );
+
+                        if (abrirTeams) {
+                            window.open(`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(cliente.contato)}`, '_blank');
+                        }
+                    } catch (e) {
+                        // Fallback se o navegador restringir a cópia de imagens: copia o texto
+                        await navigator.clipboard.writeText(resultado.mensagemTexto);
+                        alert(`📋 Texto da cobrança copiado para a área de transferência! (Falha ao gerar imagem: ${e.message})`);
+                    }
+                }
+            });
+        });
+        
         // DISPARAR MENSAGEM DE COBRANÇA
         document.querySelectorAll('.btn-gerar-cobranca').forEach(btn => {
             btn.addEventListener('click', async () => {
