@@ -20,10 +20,12 @@ export class ControladorTabelas {
                 modelo: salvo.modelo || 'DESTAQUE',
                 nomeDestaque: salvo.nomeDestaque || 'Taça',
                 precoDestaque: salvo.precoDestaque ?? 6.49,
-                subtitulo: salvo.subtitulo || 'Sobremesa especial Cacau Show',
-                subtituloMulti: salvo.subtituloMulti || 'Chocolates Cacau Show na Mesa',
+                subtitulo: salvo.subtitulo || 'Sobremesa especial Cacau Show • Lista de Anotação',
+                subtituloMulti: salvo.subtituloMulti || 'Anote seu nome e marque a quantidade retirada',
                 selecionadosMulti: Array.isArray(salvo.selecionadosMulti) ? salvo.selecionadosMulti : [],
                 incluirSetor: Boolean(salvo.incluirSetor),
+                mesRef: salvo.mesRef || '',
+                folhaNumero: salvo.folhaNumero || '',
                 qtdLinhas: salvo.qtdLinhas || 22,
                 usarEscassez: salvo.usarEscassez !== false,
                 tituloEscassez: salvo.tituloEscassez || '⚡ SOMENTE HOJE — DISPONÍVEL APENAS POR 1 DIA!',
@@ -61,7 +63,6 @@ export class ControladorTabelas {
                 }
             }
 
-            // Pré-seleciona os 4 primeiros produtos com estoque se o usuário ainda não escolheu nenhum no modo Multi
             if ((!this.config.selecionadosMulti || this.config.selecionadosMulti.length === 0) && this.produtos.length > 0) {
                 const comEstoque = this.produtos.filter(p => p.obterEstoqueTotal() > 0).slice(0, 4);
                 const padrao = comEstoque.length > 0 ? comEstoque : this.produtos.slice(0, 4);
@@ -90,10 +91,12 @@ export class ControladorTabelas {
             ...this.config,
             nomeDestaque: document.getElementById('tab-nome-destaque')?.value || 'Taça',
             precoDestaque: Number(document.getElementById('tab-preco-destaque')?.value || 0),
-            subtitulo: document.getElementById('tab-subtitulo')?.value || 'Sobremesa especial Cacau Show',
-            subtituloMulti: document.getElementById('tab-subtitulo-multi')?.value || 'Chocolates Cacau Show na Mesa',
+            subtitulo: document.getElementById('tab-subtitulo')?.value || 'Sobremesa especial Cacau Show • Lista de Anotação',
+            subtituloMulti: document.getElementById('tab-subtitulo-multi')?.value || 'Anote seu nome e marque a quantidade retirada',
             selecionadosMulti: selecionados,
             incluirSetor: Boolean(document.getElementById('tab-incluir-setor')?.checked),
+            mesRef: document.getElementById('tab-mes-ref')?.value || '',
+            folhaNumero: document.getElementById('tab-folha-numero')?.value || '',
             qtdLinhas: Number(document.getElementById('tab-qtd-linhas')?.value || 22),
             usarEscassez: Boolean(document.getElementById('tab-usar-escassez')?.checked),
             tituloEscassez: document.getElementById('tab-titulo-escassez')?.value || '',
@@ -140,6 +143,8 @@ export class ControladorTabelas {
             },
             produtosMulti,
             incluirSetor: this.config.incluirSetor,
+            mesRef: this.config.mesRef,
+            folhaNumero: this.config.folhaNumero,
             usarEscassez: this.config.usarEscassez,
             tituloEscassez: this.config.tituloEscassez,
             textoEscassez: this.config.textoEscassez,
@@ -192,11 +197,10 @@ export class ControladorTabelas {
             });
         });
 
-        // Abre a janela ANTES do await para evitar bloqueio de pop-up em celulares
         btnAbrirEditor?.addEventListener('click', async () => {
             const novaAba = window.open('', '_blank');
             if (novaAba) {
-                novaAba.document.write('<p style="font-family:Arial;padding:24px;">Gerando folha A4 com QR Code...</p>');
+                novaAba.document.write('<p style="font-family:Arial;padding:24px;">Gerando folha A4 com logo e QR Code...</p>');
             }
 
             try {
@@ -207,7 +211,6 @@ export class ControladorTabelas {
                     novaAba.document.write(html);
                     novaAba.document.close();
                 } else {
-                    // Fallback se o navegador bloqueou pop-up
                     const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
                     window.location.href = url;

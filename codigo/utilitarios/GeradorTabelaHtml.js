@@ -1,11 +1,12 @@
 import { GeradorPixClipboard } from './GeradorPixClipboard.js';
+import { LOGO_CACAU_SHOW_SVG } from './LogoCacauShowSvg.js';
 
 /**
  * UTILITÁRIO: GeradorTabelaHtml
  * Gera o documento HTML A4 completo nos dois modelos:
  * - 'DESTAQUE': 1 produto em destaque com card de preço, escassez e guia 1x..5x.
- * - 'MULTI': múltiplos chocolates em colunas lado a lado.
- * Suporta modo editor interativo (contenteditable + barra de ferramentas) e modo limpo para download.
+ * - 'MULTI': múltiplos chocolates em colunas, Mês/Ref + Folha Nº e tabela de multiplicação rápida.
+ * Sem colunas Total/Pago. Suporta modo editor interativo e modo limpo para download.
  */
 export class GeradorTabelaHtml {
     static formatarMoeda(valor) {
@@ -26,6 +27,8 @@ export class GeradorTabelaHtml {
         produtoDestaque = { nome: 'Taça', preco: 6.49 },
         produtosMulti = [],
         incluirSetor = false,
+        mesRef = '',
+        folhaNumero = '',
         usarEscassez = true,
         tituloEscassez = '⚡ SOMENTE HOJE — DISPONÍVEL APENAS POR 1 DIA!',
         textoEscassez = '',
@@ -37,7 +40,6 @@ export class GeradorTabelaHtml {
         const linhasQtd = Math.max(1, Math.min(45, Number(quantidadeLinhas || 22)));
         const editavelAttr = modoEdicao ? ' contenteditable="true" spellcheck="false"' : '';
 
-        // Gera QR Code oficial do Pix offline em Base64 usando o GeradorPixClipboard do projeto
         let qrHtml = '<div style="font-size:8px;text-align:center;color:#777;padding:4px;">Sem Chave Pix</div>';
         if (pixChave && pixChave.trim() !== '') {
             try {
@@ -62,7 +64,7 @@ export class GeradorTabelaHtml {
             ? produtosMulti
             : [{ nome: 'Trufa 30g', preco: 5.29 }, { nome: 'Tablete 20g', preco: 5.29 }];
 
-        // Monta cabeçalho da tabela e células conforme o modelo
+        // Cabeçalhos e células dos produtos (SEM colunas Total e Pago)
         let cabecalhosProdutosHtml = '';
         let celulasProdutosLinhaHtml = '';
 
@@ -98,13 +100,11 @@ export class GeradorTabelaHtml {
                     <td class="col-nome"${editavelAttr}></td>
                     ${colunaSetorCell}
                     ${celulasProdutosLinhaHtml}
-                    <td class="col-total"${editavelAttr}></td>
-                    <td class="col-pago"><span class="checkbox-pago"></span></td>
                 </tr>
             `;
         }
 
-        // Guia rápido no rodapé
+        // Tabela de Multiplicação Rápida
         let guiaRapidoHtml = '';
         if (ehDestaque) {
             const itensRef = [1, 2, 3, 4, 5].map(q =>
@@ -112,21 +112,54 @@ export class GeradorTabelaHtml {
             ).join(' &nbsp;|&nbsp; ');
             guiaRapidoHtml = `
                 <div class="calc-bar"${editavelAttr}>
-                    <span class="calc-header-title"><strong>Guia rápido:</strong></span>
+                    <span class="calc-header-title"><strong>Multiplicação rápida:</strong></span>
                     ${itensRef}
                 </div>
             `;
         } else {
-            const itensRef = listaMulti.map(p =>
-                `<strong>${this.escaparHtml(p.nome)}</strong>: ${this.formatarMoeda(p.preco)}`
-            ).join(' &nbsp;|&nbsp; ');
+            const linhasMultiCalc = listaMulti.map(p => {
+                const preco = Number(p.preco || 0);
+                return `
+                    <tr>
+                        <td class="calc-prod-nome"${editavelAttr}>${this.escaparHtml(p.nome)} <span style="color:#6d4c3d;">(${this.formatarMoeda(preco)})</span></td>
+                        <td${editavelAttr}>${this.formatarMoeda(preco * 1)}</td>
+                        <td${editavelAttr}>${this.formatarMoeda(preco * 2)}</td>
+                        <td${editavelAttr}>${this.formatarMoeda(preco * 3)}</td>
+                        <td${editavelAttr}>${this.formatarMoeda(preco * 4)}</td>
+                        <td${editavelAttr}>${this.formatarMoeda(preco * 5)}</td>
+                    </tr>
+                `;
+            }).join('');
+
             guiaRapidoHtml = `
-                <div class="calc-bar"${editavelAttr}>
-                    <span class="calc-header-title"><strong>Tabela de preços:</strong></span>
-                    ${itensRef}
+                <div class="calc-multi-box">
+                    <div class="calc-multi-titulo"${editavelAttr}>🧮 Multiplicação Rápida (Valores por Quantidade)</div>
+                    <table class="calc-multi-table">
+                        <thead>
+                            <tr>
+                                <th class="calc-prod-nome-th"${editavelAttr}>Produto (Unitário)</th>
+                                <th${editavelAttr}>1x</th>
+                                <th${editavelAttr}>2x</th>
+                                <th${editavelAttr}>3x</th>
+                                <th${editavelAttr}>4x</th>
+                                <th${editavelAttr}>5x</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhasMultiCalc}
+                        </tbody>
+                    </table>
                 </div>
             `;
         }
+
+        // Lado direito do cabeçalho: Preço em Destaque OU Mês/Ref + Folha Nº
+        const mesRefHtml = mesRef && mesRef.trim()
+            ? this.escaparHtml(mesRef.trim())
+            : '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        const folhaNumHtml = folhaNumero && folhaNumero.trim()
+            ? this.escaparHtml(folhaNumero.trim())
+            : '&nbsp;&nbsp;&nbsp;&nbsp;';
 
         const headerDireitaHtml = ehDestaque
             ? `
@@ -136,9 +169,9 @@ export class GeradorTabelaHtml {
                 </div>
             `
             : `
-                <div class="price-card" style="min-width: 145px;">
-                    <div class="prod-name"${editavelAttr}>CONSUMO NA MESA</div>
-                    <span class="price-tag" style="font-size: 16px; margin-top: 2px;"${editavelAttr}>Pegue &amp; Anote</span>
+                <div class="meta-info">
+                    <div>Mês/Ref: <span class="meta-box"${editavelAttr}>${mesRefHtml}</span></div>
+                    <div>Folha Nº: <span class="meta-box" style="min-width: 38px;"${editavelAttr}>${folhaNumHtml}</span></div>
                 </div>
             `;
 
@@ -146,18 +179,21 @@ export class GeradorTabelaHtml {
             ? `
                 <div class="scarcity-bar">
                     <strong${editavelAttr}>${this.escaparHtml(tituloEscassez)}</strong>
-                    <span class="meta-info"${editavelAttr}>${this.escaparHtml(textoEscassez)}</span>
+                    <span class="meta-info-texto"${editavelAttr}>${this.escaparHtml(textoEscassez)}</span>
                 </div>
             `
             : '';
 
         const textoInstrucao = ehDestaque
             ? `<strong>Como funciona:</strong> 1) Pegue a sua ${nomeProdDestaque} &nbsp;•&nbsp; 2) Anote seu <strong>Nome</strong> e marque a <strong>Quantidade</strong> (ex: I, II) &nbsp;•&nbsp; 3) Acerte depois via <strong>PIX</strong>!`
-            : `<strong>Como funciona:</strong> 1) Pegue seu chocolate &nbsp;•&nbsp; 2) Anote seu <strong>Nome</strong> e marque a quantidade na coluna do sabor (ex: I, II) &nbsp;•&nbsp; 3) Acerte via <strong>PIX</strong>!`;
+            : `<span>✍️ <strong>Como marcar:</strong> Escreva seu <strong>Nome</strong> e faça tracinhos (ex: <strong>I, II, III</strong>) na coluna do chocolate.</span> &nbsp;•&nbsp; <span>🗓️ Acerto no final do mês ou via PIX.</span>`;
 
         const detalheValorPixHtml = ehDestaque
             ? `<div>Valor unitário: <strong>${precoDestaqueStr}</strong></div>`
-            : `<div>Informe o valor total somado dos seus chocolates</div>`;
+            : `<div>Some suas quantidades na tabela de multiplicação acima</div>`;
+
+        // Altura de linha calibrada para sempre caber em 1 única folha A4
+        const alturaLinhaMm = ehDestaque ? '7.7mm' : (listaMulti.length >= 4 ? '6.6mm' : '7.0mm');
 
         const barraEditorHtml = modoEdicao ? this.obterBarraEditorHtml() : '';
         const estiloEditorCss = modoEdicao ? this.obterEstiloEditorCss() : '';
@@ -208,23 +244,47 @@ export class GeradorTabelaHtml {
             color: #ffffff;
             border: 2px solid #c59b27;
             border-radius: 6px;
-            padding: 10px 14px;
+            padding: 8px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        .brand-col-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-badge {
+            background: #ffffff;
+            border: 1.5px solid #c59b27;
+            border-radius: 6px;
+            padding: 3px 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .logo-svg {
+            width: 44px;
+            height: 38px;
+            display: block;
         }
 
         .brand-title {
             font-family: Georgia, "Times New Roman", serif;
-            font-size: 21px;
+            font-size: 18px;
             font-weight: 900;
-            letter-spacing: 1px;
+            letter-spacing: 0.4px;
             color: #F3E5AB;
+            line-height: 1.15;
         }
 
         .brand-subtitle {
-            font-size: 12.5px;
+            font-size: 11.5px;
             color: #ffffff;
             margin-top: 2px;
         }
@@ -234,64 +294,96 @@ export class GeradorTabelaHtml {
             color: #3D1F14;
             border: 2px solid #c59b27;
             border-radius: 6px;
-            padding: 6px 14px;
+            padding: 5px 12px;
             text-align: center;
-            min-width: 135px;
+            min-width: 130px;
         }
 
         .price-card .prod-name {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             color: #5C2F1E;
         }
 
         .price-card .price-tag {
             display: block;
             font-family: Georgia, "Times New Roman", serif;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
             color: #2b150d;
             line-height: 1.1;
         }
 
+        .meta-info {
+            background: #ffffff;
+            color: #2b150d;
+            border: 2px solid #c59b27;
+            border-radius: 6px;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            min-width: 148px;
+        }
+
+        .meta-info > div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meta-box {
+            display: inline-block;
+            min-width: 68px;
+            border-bottom: 1.5px solid #4A2518;
+            background: #FAF6EF;
+            padding: 1px 4px;
+            text-align: center;
+            font-weight: 800;
+            color: #2b150d;
+        }
+
         .scarcity-bar {
-            margin-top: 6px;
+            margin-top: 5px;
             background: #FFF6DC;
             border: 1.5px solid #c59b27;
             border-left: 6px solid #b42318;
             border-radius: 4px;
-            padding: 6px 10px;
+            padding: 5px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 11px;
+            font-size: 10.8px;
             color: #2b150d;
             gap: 8px;
         }
 
         .scarcity-bar strong {
             color: #9e1c13;
-            font-size: 11.5px;
+            font-size: 11px;
             letter-spacing: 0.3px;
         }
 
         .instruction-bar {
             margin-top: 5px;
-            font-size: 11px;
+            font-size: 10.5px;
             color: #4A2518;
             background: #FAF6EF;
             border: 1px solid #d9c7a3;
             border-radius: 4px;
-            padding: 5px 10px;
+            padding: 4px 8px;
             text-align: center;
         }
 
         .main-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
+            margin-top: 5px;
             font-size: 11px;
         }
 
@@ -299,10 +391,10 @@ export class GeradorTabelaHtml {
             background: #4A2518;
             color: #F3E5AB;
             border: 1px solid #4A2518;
-            padding: 6px 5px;
+            padding: 5px 5px;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 10px;
+            font-size: 9.8px;
             letter-spacing: 0.3px;
         }
 
@@ -313,10 +405,10 @@ export class GeradorTabelaHtml {
 
         .main-table thead th.prod-header .price-tag {
             display: block;
-            font-size: 10.5px;
+            font-size: 10.2px;
             color: #F3E5AB;
             font-weight: 800;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .main-table tbody tr:nth-child(even) {
@@ -325,8 +417,8 @@ export class GeradorTabelaHtml {
 
         .main-table tbody td {
             border: 1px solid #8c7051;
-            height: 7.7mm;
-            padding: 2px 5px;
+            height: ${alturaLinhaMm};
+            padding: 1.5px 5px;
             vertical-align: middle;
         }
 
@@ -339,7 +431,7 @@ export class GeradorTabelaHtml {
         }
 
         .col-nome {
-            min-width: ${ehDestaque ? '76mm' : '48mm'};
+            min-width: ${ehDestaque ? '82mm' : '54mm'};
         }
 
         .col-setor-th,
@@ -353,27 +445,8 @@ export class GeradorTabelaHtml {
             text-align: center;
         }
 
-        .col-total {
-            width: 22mm;
-            text-align: center;
-        }
-
-        .col-pago {
-            width: 15mm;
-            text-align: center;
-        }
-
-        .checkbox-pago {
-            display: inline-block;
-            width: 4.2mm;
-            height: 4.2mm;
-            border: 1.4px solid #4A2518;
-            border-radius: 2px;
-            vertical-align: middle;
-        }
-
         .calc-bar {
-            margin-top: 6px;
+            margin-top: 5px;
             background: #FAF6EF;
             border: 1px dashed #c59b27;
             border-radius: 4px;
@@ -383,12 +456,62 @@ export class GeradorTabelaHtml {
             color: #3D1F14;
         }
 
+        .calc-multi-box {
+            margin-top: 5px;
+            border: 1px solid #c59b27;
+            border-radius: 5px;
+            background: #FAF6EF;
+            padding: 4px 6px;
+        }
+
+        .calc-multi-titulo {
+            font-size: 9.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #4A2518;
+            margin-bottom: 3px;
+            letter-spacing: 0.3px;
+        }
+
+        .calc-multi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9.5px;
+            background: #ffffff;
+        }
+
+        .calc-multi-table th {
+            background: #5C2F1E;
+            color: #F3E5AB;
+            border: 1px solid #8c7051;
+            padding: 2px 4px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .calc-multi-table th.calc-prod-nome-th {
+            text-align: left;
+        }
+
+        .calc-multi-table td {
+            border: 1px solid #c9b59c;
+            padding: 2px 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #2b150d;
+        }
+
+        .calc-multi-table td.calc-prod-nome {
+            text-align: left;
+            font-weight: 700;
+        }
+
         .pix-box {
-            margin-top: 6px;
+            margin-top: 5px;
             border: 1.5px solid #c59b27;
             border-radius: 6px;
             background: #FFFDF9;
-            padding: 7px 10px;
+            padding: 6px 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -402,8 +525,8 @@ export class GeradorTabelaHtml {
         }
 
         .pix-qr-box {
-            width: 22mm;
-            height: 22mm;
+            width: 21mm;
+            height: 21mm;
             border: 1px solid #c59b27;
             padding: 1mm;
             background: #ffffff;
@@ -417,17 +540,17 @@ export class GeradorTabelaHtml {
             display: inline-block;
             background: #4A2518;
             color: #F3E5AB;
-            font-size: 9.5px;
+            font-size: 9px;
             font-weight: 800;
             padding: 2px 7px;
             border-radius: 3px;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             letter-spacing: 0.5px;
         }
 
         .pix-details {
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 10.5px;
+            line-height: 1.35;
             color: #2b150d;
         }
 
@@ -437,10 +560,10 @@ export class GeradorTabelaHtml {
         }
 
         .pix-right-instructions {
-            font-size: 10px;
+            font-size: 9.8px;
             color: #5C2F1E;
             text-align: right;
-            max-width: 62mm;
+            max-width: 60mm;
             line-height: 1.35;
         }
 
@@ -467,9 +590,12 @@ export class GeradorTabelaHtml {
     <div class="folha-a4">
         <div>
             <header class="header-box">
-                <div>
-                    <div class="brand-title"${editavelAttr}>CACAU SHOW</div>
-                    <div class="brand-subtitle"${editavelAttr}>${this.escaparHtml(subtitulo)} • Lista de Anotação</div>
+                <div class="brand-col-left">
+                    <div class="logo-badge">${LOGO_CACAU_SHOW_SVG}</div>
+                    <div>
+                        <div class="brand-title"${editavelAttr}>${ehDestaque ? 'CACAU SHOW' : 'Controle de Consumo • Chocolates'}</div>
+                        <div class="brand-subtitle"${editavelAttr}>${this.escaparHtml(subtitulo)}</div>
+                    </div>
                 </div>
                 ${headerDireitaHtml}
             </header>
@@ -487,8 +613,6 @@ export class GeradorTabelaHtml {
                         <th>Nome Completo</th>
                         ${colunaSetorHeader}
                         ${cabecalhosProdutosHtml}
-                        <th>Total (R$)</th>
-                        <th>Pago</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -506,7 +630,7 @@ export class GeradorTabelaHtml {
                         ${qrHtml}
                     </div>
                     <div>
-                        <div class="pix-badge"${editavelAttr}>PAGUE DEPOIS COM PIX</div>
+                        <div class="pix-badge"${editavelAttr}>PAGUE COM PIX</div>
                         <div class="pix-details">
                             <div>Titular: <strong id="pix-titular-texto"${editavelAttr}>${this.escaparHtml(pixTitular)}</strong></div>
                             <div>Chave PIX: <span class="pix-key" id="pix-chave-texto"${editavelAttr}>${this.escaparHtml(pixChave || 'Não informada')}</span></div>
@@ -516,7 +640,7 @@ export class GeradorTabelaHtml {
                 </div>
                 <div class="pix-right-instructions"${editavelAttr}>
                     <strong>Atenção:</strong><br />
-                    Após pagar via PIX, envie o comprovante ou marque um <strong>✓</strong> na coluna <em>Pago</em> ao lado do seu nome.
+                    Após pagar via PIX, envie o comprovante pelo Teams ou WhatsApp para darmos baixa.
                 </div>
             </footer>
         </div>
@@ -653,21 +777,17 @@ export class GeradorTabelaHtml {
         var preco = prompt("Preço do produto (Ex: R$ 5,29):", "R$ 0,00");
         if (preco === null) return;
 
-        // Insere antes das 2 últimas colunas (Total e Pago)
-        var indiceInsercao = Math.max(2, theadTr.children.length - 2);
-        var thRef = theadTr.children[indiceInsercao];
-
         var th = document.createElement('th');
         th.className = 'prod-header';
         th.setAttribute('contenteditable', 'true');
         th.innerHTML = (nome.trim() || 'Produto') + ' <span class="price-tag" contenteditable="true">' + (preco.trim() || 'R$ 0,00') + '</span>';
-        theadTr.insertBefore(th, thRef);
+        theadTr.appendChild(th);
 
         tbody.querySelectorAll('tr').forEach(function(tr) {
             var td = document.createElement('td');
             td.className = 'col-prod';
             td.setAttribute('contenteditable', 'true');
-            tr.insertBefore(td, tr.children[indiceInsercao]);
+            tr.appendChild(td);
         });
     };
 
@@ -712,17 +832,15 @@ export class GeradorTabelaHtml {
             var td = document.createElement('td');
             if (i === 0) {
                 td.className = 'col-num';
-                td.setAttribute('contenteditable', 'true');
                 td.textContent = numFmt;
-            } else if (i === theadTr.children.length - 1) {
-                td.className = 'col-pago';
-                td.innerHTML = '<span class="checkbox-pago"></span>';
+            } else if (i === 1) {
+                td.className = 'col-nome';
+            } else if (theadTr.children[i].classList.contains('col-setor-th')) {
+                td.className = 'col-setor';
             } else {
-                if (i === 1) td.className = 'col-nome';
-                else if (i === theadTr.children.length - 2) td.className = 'col-total';
-                else td.className = 'col-prod';
-                td.setAttribute('contenteditable', 'true');
+                td.className = 'col-prod';
             }
+            td.setAttribute('contenteditable', 'true');
             tr.appendChild(td);
         }
 

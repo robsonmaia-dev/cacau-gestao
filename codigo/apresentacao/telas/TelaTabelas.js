@@ -26,12 +26,12 @@ export class TelaTabelas {
                         style="height: auto; padding: 10px 8px; flex-direction: column; gap: 2px; border: 2px solid ${!ehDestaque ? 'var(--cor-primaria)' : 'var(--cor-borda)'}; background: ${!ehDestaque ? 'var(--cor-primaria)' : '#FFF'}; color: ${!ehDestaque ? '#FFF' : 'var(--cor-texto)'};">
                         <span style="font-size: 1.15rem;">🍫</span>
                         <span style="font-size: 0.8rem; font-weight: 800;">Multi-Produtos</span>
-                        <span style="font-size: 0.65rem; opacity: 0.85; font-weight: 400;">Vários sabores por coluna</span>
+                        <span style="font-size: 0.65rem; opacity: 0.85; font-weight: 400;">Mês/Ref + Multiplicação rápida</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 2. PRODUTOS DA TABELA -->
+            <!-- 2A. CONFIGURAÇÃO MODELO DESTAQUE -->
             <div class="cartao" id="bloco-config-destaque" style="display: ${ehDestaque ? 'block' : 'none'};">
                 <div class="cartao-cabecalho">
                     <span class="cartao-titulo">⚡ Produto em Destaque</span>
@@ -65,20 +65,34 @@ export class TelaTabelas {
                 <div class="grupo-campo" style="margin-bottom: 0;">
                     <label class="rotulo-campo">Subtítulo do Cabeçalho</label>
                     <input type="text" id="tab-subtitulo" class="campo-entrada"
-                        value="${config.subtitulo || 'Sobremesa especial Cacau Show'}" placeholder="Ex: Sobremesa especial Cacau Show">
+                        value="${config.subtitulo || 'Sobremesa especial Cacau Show • Lista de Anotação'}" placeholder="Ex: Sobremesa especial Cacau Show">
                 </div>
             </div>
 
+            <!-- 2B. CONFIGURAÇÃO MODELO MULTI-PRODUTOS -->
             <div class="cartao" id="bloco-config-multi" style="display: ${!ehDestaque ? 'block' : 'none'};">
                 <div class="cartao-cabecalho">
-                    <span class="cartao-titulo">🍫 Colunas de Chocolates</span>
+                    <span class="cartao-titulo">🍫 Colunas e Identificação da Folha</span>
                     <span id="tab-contador-multi" style="font-size: 0.75rem; font-weight: 700; color: var(--cor-primaria);">0 selecionado(s)</span>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <div class="grupo-campo" style="flex: 1.5; margin-bottom: 0;">
+                        <label class="rotulo-campo">Mês/Ref (vazio = preencher à mão)</label>
+                        <input type="text" id="tab-mes-ref" class="campo-entrada"
+                            value="${config.mesRef || ''}" placeholder="Ex: 11/2026 ou deixe vazio">
+                    </div>
+                    <div class="grupo-campo" style="flex: 1; margin-bottom: 0;">
+                        <label class="rotulo-campo">Folha Nº (opcional)</label>
+                        <input type="text" id="tab-folha-numero" class="campo-entrada"
+                            value="${config.folhaNumero || ''}" placeholder="Ex: 01">
+                    </div>
                 </div>
 
                 <div class="grupo-campo" style="margin-bottom: 10px;">
                     <label class="rotulo-campo">Subtítulo da Folha</label>
                     <input type="text" id="tab-subtitulo-multi" class="campo-entrada"
-                        value="${config.subtituloMulti || 'Chocolates Cacau Show na Mesa'}" placeholder="Ex: Chocolates Cacau Show na Mesa">
+                        value="${config.subtituloMulti || 'Anote seu nome e marque a quantidade retirada'}" placeholder="Ex: Anote seu nome e marque a quantidade retirada">
                 </div>
 
                 <label class="rotulo-campo">Selecione os produtos do estoque que vão virar colunas:</label>

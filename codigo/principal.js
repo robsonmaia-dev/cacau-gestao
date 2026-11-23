@@ -1,4 +1,5 @@
 import { AutenticacaoServico } from './repositorios/AutenticacaoServico.js';
+import { VERSAO_APP } from './versao.js';
 
 import { RepositorioProdutos } from './repositorios/RepositorioProdutos.js';
 import { RepositorioClientes } from './repositorios/RepositorioClientes.js';
@@ -208,7 +209,15 @@ async function inicializarSistemaCompleto() {
     }
 }
 
+function atualizarBadgesVersao() {
+    const elRodape = document.getElementById('versao-app-rodape');
+    if (elRodape) elRodape.innerText = `Versão ${VERSAO_APP}`;
+    const elLogin = document.getElementById('versao-app-login');
+    if (elLogin) elLogin.innerText = `v${VERSAO_APP}`;
+}
+
 async function verificarSeguranca() {
+    atualizarBadgesVersao();
     const telaLogin = document.getElementById('tela-login-bloqueio');
     const appAutenticada = document.getElementById('aplicacao-autenticada');
     const formLogin = document.getElementById('form-login-seguro');
