@@ -28,6 +28,7 @@ import { ControladorCobranca } from './apresentacao/controladores/ControladorCob
 import { ControladorRelatorios } from './apresentacao/controladores/ControladorRelatorios.js';
 import { ControladorGestao } from './apresentacao/controladores/ControladorGestao.js';
 import { ControladorCatalogo } from './apresentacao/controladores/ControladorCatalogo.js';
+import { ControladorTabelas } from './apresentacao/controladores/ControladorTabelas.js';
 
 async function purgarCacheDoNavegador() {
     try {
@@ -126,6 +127,7 @@ async function inicializarSistemaCompleto() {
         let ctrlCobranca = null;
         let ctrlRelatorios = null;
         let ctrlGestao = null;
+        let ctrlTabelas = null;
 
         const navegarParaAba = async (idAba) => {
             trocarAbaAtiva(idAba);
@@ -138,6 +140,7 @@ async function inicializarSistemaCompleto() {
             if (idAba === 'aba-relatorios') await ctrlRelatorios.atualizarTela();
             if (idAba === 'aba-gestao') await ctrlGestao.atualizarTela();
             if (idAba === 'aba-catalogo') await ctrlCatalogo.atualizarTela();
+            if (idAba === 'aba-tabelas') await ctrlTabelas.atualizarTela();
         };
 
         const atualizarTudo = async () => {
@@ -149,6 +152,7 @@ async function inicializarSistemaCompleto() {
             if (ctrlCobranca) await ctrlCobranca.atualizarTela();
             if (ctrlRelatorios) await ctrlRelatorios.atualizarTela();
             if (ctrlGestao) await ctrlGestao.atualizarTela();
+            if (ctrlTabelas) await ctrlTabelas.atualizarTela();
         };
 
         const ctrlCatalogo = new ControladorCatalogo(repoProdutos, repoConfiguracoes);
@@ -182,7 +186,10 @@ async function inicializarSistemaCompleto() {
         await ctrlClientes.inicializar();
         await ctrlCobranca.inicializar();
         await ctrlRelatorios.inicializar();
+        ctrlTabelas = new ControladorTabelas(repoProdutos, repoConfiguracoes);
+
         await ctrlGestao.inicializar();
+        await ctrlTabelas.inicializar();
 
         configurarNavegacaoHibrida(async (idAba) => {
             await navegarParaAba(idAba);
