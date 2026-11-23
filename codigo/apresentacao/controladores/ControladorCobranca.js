@@ -10,11 +10,12 @@ function normalizar(texto) {
 }
 
 export class ControladorCobranca {
-    constructor(repositorioClientes, casoDeUsoGerarCobranca, casoDeUsoRegistrarPagamento, aoAtualizarDados) {
+    constructor(repositorioClientes, casoDeUsoGerarCobranca, casoDeUsoRegistrarPagamento, aoAtualizarDados, repositorioConfiguracoes = null) {
         this.repositorioClientes = repositorioClientes;
         this.casoDeUsoGerarCobranca = casoDeUsoGerarCobranca;
         this.casoDeUsoRegistrarPagamento = casoDeUsoRegistrarPagamento;
         this.aoAtualizarDados = aoAtualizarDados;
+        this.repositorioConfiguracoes = repositorioConfiguracoes;
         this.container = document.getElementById('conteudo-cobranca');
 
         this.chavePix = localStorage.getItem('cacau_chave_pix') || '';
@@ -36,6 +37,12 @@ export class ControladorCobranca {
         if (!this.container) return;
 
         try {
+            if (this.repositorioConfiguracoes) {
+                const config = await this.repositorioConfiguracoes.obter();
+                if (config.chavePix) this.chavePix = config.chavePix;
+                if (config.linkCatalogo) this.linkCatalogo = config.linkCatalogo;
+            }
+
             const clientes = await this.repositorioClientes.obterTodosComHistorico();
             this.devedores = clientes.filter(c => c.possuiDebito());
 
@@ -212,14 +219,16 @@ export class ControladorCobranca {
         const inputPix = document.getElementById('campo-chave-pix');
         const inputCatalogo = document.getElementById('campo-link-catalogo');
 
-        inputPix?.addEventListener('change', () => {
+        inputPix?.addEventListener('change', async () => {
             this.chavePix = inputPix.value.trim();
             localStorage.setItem('cacau_chave_pix', this.chavePix);
+            await this.repositorioConfiguracoes?.salvarConfiguracoes({ chavePix: this.chavePix });
         });
 
-        inputCatalogo?.addEventListener('change', () => {
+        inputCatalogo?.addEventListener('change', async () => {
             this.linkCatalogo = inputCatalogo.value.trim();
             localStorage.setItem('cacau_link_catalogo', this.linkCatalogo);
+            await this.repositorioConfiguracoes?.salvarConfiguracoes({ linkCatalogo: this.linkCatalogo });
         });
 
         document.querySelectorAll('.botao-fechar-modal').forEach(btn => {

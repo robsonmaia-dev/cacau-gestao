@@ -41,8 +41,8 @@ export class TelaHome {
                 <!-- Pílulas Financeiras -->
                 <div style="display: flex; gap: 8px;">
                     <div class="pilula-hero">
-                        <span class="pilula-hero-rotulo">⚡ Pix Hoje</span>
-                        <div class="pilula-hero-valor positivo">${this.formatarMoeda(dados.pixHoje)}</div>
+                        <span class="pilula-hero-rotulo">💰 Recebido Hoje</span>
+                        <div class="pilula-hero-valor positivo">${this.formatarMoeda(dados.recebidoHoje ?? dados.pixHoje)}</div>
                     </div>
                     <div class="pilula-hero">
                         <span class="pilula-hero-rotulo">⏳ Fiado Pendente</span>

@@ -13,13 +13,15 @@ export class GerarCobrancaMensal {
         const vendasCliente = todasVendas.filter(v => v.clienteId === cliente.id && v.ehFiado());
 
         const mapaItensConsumidos = new Map();
-        let subtotalConsumido = 0;
+        let subtotalBruto = 0;
+        let totalDescontos = 0;
 
         vendasCliente.forEach(venda => {
+            totalDescontos += Number(venda.desconto || 0);
             venda.itens.forEach(item => {
                 const atual = mapaItensConsumidos.get(item.nomeProduto) || { quantidade: 0, total: 0 };
                 const valorItem = item.quantidade * item.precoVendaUnitario;
-                subtotalConsumido += valorItem;
+                subtotalBruto += valorItem;
 
                 mapaItensConsumidos.set(item.nomeProduto, {
                     quantidade: atual.quantidade + item.quantidade,
@@ -27,6 +29,8 @@ export class GerarCobrancaMensal {
                 });
             });
         });
+
+        const subtotalConsumido = Math.max(0, subtotalBruto - totalDescontos);
 
         let linhasExtrato = "";
         let linhasExtratoHtml = "";
@@ -36,6 +40,10 @@ export class GerarCobrancaMensal {
                 linhasExtrato += `• ${info.quantidade}x ${nomeProduto} (R$ ${info.total.toFixed(2)})\n`;
                 linhasExtratoHtml += `<li><strong>${info.quantidade}x</strong> ${nomeProduto} — R$ ${info.total.toFixed(2)}</li>`;
             });
+            if (totalDescontos > 0) {
+                linhasExtrato += `• Descontos aplicados: - R$ ${totalDescontos.toFixed(2)}\n`;
+                linhasExtratoHtml += `<li style="color: #2E7D32;"><strong>Descontos aplicados:</strong> - R$ ${totalDescontos.toFixed(2)}</li>`;
+            }
             linhasExtratoHtml = `<ul style="margin: 8px 0; padding-left: 20px;">${linhasExtratoHtml}</ul>`;
         } else {
             linhasExtrato = `• Saldo pendente acumulado anterior\n`;

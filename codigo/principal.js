@@ -4,6 +4,7 @@ import { RepositorioProdutos } from './repositorios/RepositorioProdutos.js';
 import { RepositorioClientes } from './repositorios/RepositorioClientes.js';
 import { RepositorioVendas } from './repositorios/RepositorioVendas.js';
 import { RepositorioPerdas } from './repositorios/RepositorioPerdas.js';
+import { RepositorioConfiguracoes } from './repositorios/RepositorioConfiguracoes.js';
 
 import { ComprarEstoque } from './casos-de-uso/ComprarEstoque.js';
 import { RegistrarVenda } from './casos-de-uso/RegistrarVenda.js';
@@ -101,6 +102,7 @@ async function inicializarSistemaCompleto() {
         const repoClientes = new RepositorioClientes();
         const repoVendas = new RepositorioVendas();
         const repoPerdas = new RepositorioPerdas();
+        const repoConfiguracoes = new RepositorioConfiguracoes();
 
         const ucComprarEstoque = new ComprarEstoque(repoProdutos);
         const ucRegistrarVenda = new RegistrarVenda(repoProdutos, repoClientes, repoVendas);
@@ -154,7 +156,7 @@ async function inicializarSistemaCompleto() {
 
         ctrlHome = new ControladorHome(repoVendas, repoProdutos, repoClientes, navegarParaAba);
         ctrlEstoque = new ControladorEstoque(repoProdutos, ucComprarEstoque, atualizarTudo);
-        ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo);
+        ctrlVendas = new ControladorVendas(repoProdutos, repoClientes, ucRegistrarVenda, atualizarTudo, repoConfiguracoes);
 
         const aoCorrigirVenda = async (dadosRelancamento) => {
             await navegarParaAba('aba-vendas');
@@ -163,7 +165,7 @@ async function inicializarSistemaCompleto() {
 
         ctrlHistorico = new ControladorHistoricoVendas(repoVendas, repoClientes, ucEstornarVenda, aoCorrigirVenda, atualizarTudo);
         ctrlClientes = new ControladorClientes(repoClientes, atualizarTudo);
-        ctrlCobranca = new ControladorCobranca(repoClientes, ucGerarCobranca, ucRegistrarPagamento, atualizarTudo);
+        ctrlCobranca = new ControladorCobranca(repoClientes, ucGerarCobranca, ucRegistrarPagamento, atualizarTudo, repoConfiguracoes);
         ctrlRelatorios = new ControladorRelatorios(ucBalanco, ucRegistrarPerda, repoProdutos, atualizarTudo);
         ctrlGestao = new ControladorGestao(
             ucPontoEquilibrio,

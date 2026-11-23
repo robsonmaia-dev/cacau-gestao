@@ -116,6 +116,12 @@ export class TelaHistoricoVendas {
                                 <span style="color: var(--cor-texto-suave);">${this.formatarMoeda(it.quantidade * it.precoVendaUnitario)}</span>
                             </div>
                         `).join('')}
+                        ${v.desconto > 0 ? `
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px; padding-top: 4px; border-top: 1px dashed #E0D5CB; color: var(--cor-sucesso); font-weight: 600;">
+                                <span>🏷️ Desconto aplicado</span>
+                                <span>- ${this.formatarMoeda(v.desconto)}</span>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <!-- AÇÕES: CORRIGIR OU CANCELAR -->

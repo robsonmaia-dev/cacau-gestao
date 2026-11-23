@@ -10,7 +10,8 @@ export class Venda {
         tipoPagamento = "A_PRAZO",      // "PIX_IMEDIATO" ou "A_PRAZO"
         dataHora = new Date().toISOString(),
         origem = "MANUAL",              // "MANUAL" ou "IA_IMAGEM" (para entrada desacoplada)
-        observacao = ""
+        observacao = "",
+        desconto = 0
     }) {
         if (!itens || itens.length === 0) {
             throw new Error("A venda precisa conter pelo menos um item.");
@@ -40,16 +41,29 @@ export class Venda {
         this.origem = origem.toUpperCase();
         this.observacao = observacao.trim();
 
+        const descontoInformado = Number(desconto || 0);
+        if (isNaN(descontoInformado) || descontoInformado < 0) {
+            throw new Error("O desconto não pode ser negativo.");
+        }
+
+        this.subtotal = this.calcularSubtotal();
+        this.desconto = Number(Math.min(this.subtotal, descontoInformado).toFixed(2));
+
         // Totais calculados
         this.valorTotal = this.calcularValorTotal();
         this.custoTotal = this.calcularCustoTotal();
         this.lucroBruto = Number((this.valorTotal - this.custoTotal).toFixed(2));
     }
 
-    calcularValorTotal() {
-        const total = this.itens.reduce((soma, item) => 
+    calcularSubtotal() {
+        const total = this.itens.reduce((soma, item) =>
             soma + (item.quantidade * item.precoVendaUnitario), 0);
         return Number(total.toFixed(2));
+    }
+
+    calcularValorTotal() {
+        const liquido = Math.max(0, this.calcularSubtotal() - (this.desconto || 0));
+        return Number(liquido.toFixed(2));
     }
 
     calcularCustoTotal() {

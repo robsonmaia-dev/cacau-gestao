@@ -7,7 +7,7 @@ export class RegistrarVenda {
         this.repositorioVendas = repositorioVendas;
     }
 
-    async executar({ clienteId, itens, tipoPagamento = 'A_PRAZO', origem = 'MANUAL', observacao = '', dataHora = null }) {
+    async executar({ clienteId, itens, tipoPagamento = 'A_PRAZO', origem = 'MANUAL', observacao = '', dataHora = null, desconto = 0 }) {
         if (!itens || itens.length === 0) {
             throw new Error("A venda precisa ter pelo menos um chocolate selecionado.");
         }
@@ -68,7 +68,8 @@ export class RegistrarVenda {
             tipoPagamento: tipoPagamento,
             origem: origem,
             observacao: observacao,
-            dataHora: dataHora || new Date().toISOString()
+            dataHora: dataHora || new Date().toISOString(),
+            desconto: Number(desconto || 0)
         });
 
         for (const lote of lotesParaAtualizarNoBanco) {

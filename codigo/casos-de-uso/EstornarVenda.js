@@ -65,7 +65,8 @@ export class EstornarVenda {
             clienteId: clienteId,
             tipoPagamento: tipoPag,
             itens: itensVenda,
-            valorTotal: Number(venda.valor_total || venda.valorTotal)
+            valorTotal: Number(venda.valor_total || venda.valorTotal),
+            desconto: Number(venda.desconto || 0)
         };
     }
 }

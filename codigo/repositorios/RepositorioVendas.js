@@ -15,7 +15,8 @@ export class RepositorioVendas extends RepositorioBase {
             tipoPagamento: item.tipo_pagamento,
             dataHora: item.data_hora,
             origem: item.origem,
-            observacao: item.observacao
+            observacao: item.observacao,
+            desconto: Number(item.desconto || 0)
         }));
     }
 
@@ -30,6 +31,7 @@ export class RepositorioVendas extends RepositorioBase {
             tipo_pagamento: venda.tipoPagamento,
             origem: venda.origem,
             observacao: venda.observacao,
+            desconto: Number(venda.desconto || 0),
             data_hora: venda.dataHora
         });
     }

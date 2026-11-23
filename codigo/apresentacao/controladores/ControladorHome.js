@@ -21,11 +21,31 @@ export class ControladorHome {
             const produtos = await this.repositorioProdutos.obterTodosComLotes();
             const clientes = await this.repositorioClientes.obterTodosComHistorico();
 
-            // 1. Pix recebido hoje
-            const hojeISO = new Date().toISOString().split('T')[0];
-            const pixHoje = vendas
-                .filter(v => (v.dataHora || '').startsWith(hojeISO) && v.tipoPagamento === 'PIX_IMEDIATO')
-                .reduce((soma, v) => soma + Number(v.valorTotal), 0);
+            // 1. Recebido hoje (Vendas Pix na hora + Baixas de pagamentos do dia em horário local)
+            const formatarDataLocal = (valorData) => {
+                if (!valorData) return '';
+                const d = new Date(valorData);
+                if (isNaN(d.getTime())) return '';
+                const ano = d.getFullYear();
+                const mes = String(d.getMonth() + 1).padStart(2, '0');
+                const dia = String(d.getDate()).padStart(2, '0');
+                return `${ano}-${mes}-${dia}`;
+            };
+
+            const hojeLocal = formatarDataLocal(new Date());
+
+            const vendasPixHoje = vendas
+                .filter(v => formatarDataLocal(v.dataHora) === hojeLocal && v.tipoPagamento === 'PIX_IMEDIATO')
+                .reduce((soma, v) => soma + Number(v.valorTotal || 0), 0);
+
+            const baixasPagamentosHoje = clientes.reduce((somaCli, cli) => {
+                const pagosHoje = (cli.historicoPagamentos || [])
+                    .filter(pag => formatarDataLocal(pag.dataHora) === hojeLocal)
+                    .reduce((somaPag, pag) => somaPag + Number(pag.valor || 0), 0);
+                return somaCli + pagosHoje;
+            }, 0);
+
+            const recebidoHoje = Number((vendasPixHoje + baixasPagamentosHoje).toFixed(2));
 
             // 2. Fiado pendente total
             const totalFiado = clientes.reduce((soma, c) => soma + Number(c.saldoDevedor || 0), 0);
@@ -63,7 +83,8 @@ export class ControladorHome {
                 .slice(0, 3);
 
             TelaHome.renderizar(this.container, {
-                pixHoje,
+                recebidoHoje,
+                pixHoje: recebidoHoje,
                 totalFiado,
                 totalItensEstoque,
                 itensReposicao,
