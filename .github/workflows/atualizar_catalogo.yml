@@ -2,9 +2,14 @@ name: Atualizar Catalogo Oficial Python
 
 on:
   workflow_dispatch: # Permite rodar com um clique de botão no GitHub (pelo celular ou PC)
+    inputs:
+      catalogo_url:
+        description: 'Link da fonte do catálogo (deixe vazio para usar fonte_catalogo.txt)'
+        required: false
+        default: ''
 
 permissions:
-  contents: write # Permissão para salvar o catalogo.html no repositório
+  contents: write
 
 jobs:
   construir-catalogo:
@@ -23,11 +28,13 @@ jobs:
         run: pip install requests
 
       - name: Rodar o script Python para extrair o catálogo
+        env:
+          CATALOGO_URL: ${{ github.event.inputs.catalogo_url }}
         run: python gerar_catalogo.py
 
-      - name: Salvar e publicar o catalogo.html atualizado
+      - name: Salvar e publicar o catalogo atualizado
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add catalogo.html
+          git add catalogo.html dados_catalogo.json fonte_catalogo.txt
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: Catalogo atualizado via Python no GitHub" && git push)

@@ -1,23 +1,60 @@
 import { TelaCatalogo } from '../telas/TelaCatalogo.js';
 import { clienteSupabase } from '../../repositorios/ConfiguracaoBanco.js';
+import { ImportadorCatalogoOficial } from '../../catalogo/ImportadorCatalogoOficial.js';
 
 export class ControladorCatalogo {
-    constructor(repositorioProdutos) {
+    constructor(repositorioProdutos, repositorioConfiguracoes = null) {
         this.repositorioProdutos = repositorioProdutos;
+        this.repositorioConfiguracoes = repositorioConfiguracoes;
         this.container = document.getElementById('conteudo-catalogo');
         this.whatsapp = localStorage.getItem('cacau_whatsapp_vendas') || '5541984051401';
+        this.urlFonte = localStorage.getItem('cacau_url_fonte_catalogo') || ImportadorCatalogoOficial.URL_PADRAO;
         this.linkPublico = `${window.location.origin}${window.location.pathname.replace('index.html', '').replace('indice.html', '')}catalogo.html`;
         this.paginas = [];
+        this.filtroPaginas = 'TODAS';
+    }
+
+    normalizarPaginas(listaPaginas) {
+        return (listaPaginas || []).map(p => ({
+            ...p,
+            ativa: p.ativa !== false,
+            produtos: ImportadorCatalogoOficial.deduplicarProdutosPagina(p.produtos || [], p.numero)
+        }));
     }
 
     async inicializar() {
+        await this.carregarConfiguracoes();
         await this.carregarRevistaPublicada();
         await this.atualizarTela();
     }
 
+    async carregarConfiguracoes() {
+        // 1. Tenta ler do arquivo fonte_catalogo.txt como padrão inicial se não houver nada salvo
+        if (!localStorage.getItem('cacau_url_fonte_catalogo')) {
+            try {
+                const respFonte = await fetch('./fonte_catalogo.txt');
+                if (respFonte.ok) {
+                    const urlArquivo = (await respFonte.text()).trim();
+                    if (urlArquivo) this.urlFonte = urlArquivo;
+                }
+            } catch (_) {
+                // ignora se offline
+            }
+        }
+
+        // 2. Tenta ler da nuvem (tabela configuracoes)
+        if (this.repositorioConfiguracoes) {
+            try {
+                const cfg = await this.repositorioConfiguracoes.obter();
+                if (cfg?.urlFonteCatalogo) this.urlFonte = cfg.urlFonteCatalogo;
+            } catch (e) {
+                console.warn("Aviso ao buscar urlFonteCatalogo:", e);
+            }
+        }
+    }
+
     async carregarRevistaPublicada() {
         try {
-            // 1. Tenta carregar do Supabase
             const { data } = await clienteSupabase
                 .from('catalogo_publico')
                 .select('*')
@@ -25,7 +62,7 @@ export class ControladorCatalogo {
                 .single();
 
             if (data && data.paginas && data.paginas.length > 0) {
-                this.paginas = data.paginas;
+                this.paginas = this.normalizarPaginas(data.paginas);
                 this.whatsapp = data.whatsapp || this.whatsapp;
                 return;
             }
@@ -33,7 +70,6 @@ export class ControladorCatalogo {
             console.log("Catálogo ainda não publicado no Supabase.");
         }
 
-        // 2. Se não estiver no Supabase, tenta carregar dados_catalogo.json do próprio repositório
         await this.carregarArquivoJsonDoRepositorio();
     }
 
@@ -42,11 +78,22 @@ export class ControladorCatalogo {
             const resp = await fetch('./dados_catalogo.json');
             if (resp.ok) {
                 const dados = await resp.json();
-                this.paginas = dados.paginas || [];
+                this.paginas = this.normalizarPaginas(dados.paginas || []);
             }
         } catch (err) {
             console.log("Arquivo dados_catalogo.json não encontrado localmente.");
         }
+    }
+
+    atualizarContadoresVisuais() {
+        const total = this.paginas.length;
+        const ativas = this.paginas.filter(p => p.ativa !== false).length;
+
+        const elContador = document.getElementById('contador-paginas-ativas');
+        if (elContador) elContador.innerText = `${ativas} de ${total} páginas ativas`;
+
+        const elFlutuante = document.getElementById('flutuante-resumo-paginas');
+        if (elFlutuante) elFlutuante.innerText = `${ativas}`;
     }
 
     async atualizarTela() {
@@ -54,20 +101,37 @@ export class ControladorCatalogo {
         TelaCatalogo.renderizar(this.container, {
             paginas: this.paginas,
             whatsapp: this.whatsapp,
-            linkPublico: this.linkPublico
+            linkPublico: this.linkPublico,
+            urlFonte: this.urlFonte,
+            filtroPaginas: this.filtroPaginas
         });
         this.vincularEventos();
     }
 
     vincularEventos() {
+        const inputUrlFonte = document.getElementById('campo-url-fonte-catalogo');
+        const btnAtualizarFonte = document.getElementById('btn-atualizar-da-fonte');
+        const inputWhats = document.getElementById('campo-whats-vendedor');
         const btnCopiar = document.getElementById('btn-copiar-link-catalogo');
-        const btnRecarregar = document.getElementById('btn-recarregar-json-base');
-        const btnCarregarIni = document.getElementById('btn-carregar-inicial');
-        const inputArquivoJson = document.getElementById('input-arquivo-json-catalogo');
+        const selectFiltro = document.getElementById('filtro-paginas-catalogo');
         const btnMarcarTodas = document.getElementById('btn-marcar-todas-paginas');
         const btnDesmarcarTodas = document.getElementById('btn-desmarcar-todas-paginas');
-        const btnSincronizar = document.getElementById('btn-sincronizar-estoque-catalogo');
+        const btnTopo = document.getElementById('btn-voltar-topo-catalogo');
         const btnPublicar = document.getElementById('btn-salvar-publicar-catalogo');
+
+        inputUrlFonte?.addEventListener('change', async () => {
+            this.urlFonte = inputUrlFonte.value.trim();
+            localStorage.setItem('cacau_url_fonte_catalogo', this.urlFonte);
+            await this.repositorioConfiguracoes?.salvarConfiguracoes({ urlFonteCatalogo: this.urlFonte });
+        });
+
+        inputWhats?.addEventListener('change', () => {
+            const limpo = inputWhats.value.replace(/\D/g, '');
+            if (limpo) {
+                this.whatsapp = limpo;
+                localStorage.setItem('cacau_whatsapp_vendas', limpo);
+            }
+        });
 
         btnCopiar?.addEventListener('click', async () => {
             try {
@@ -78,133 +142,133 @@ export class ControladorCatalogo {
             }
         });
 
-        // Carregar do arquivo dados_catalogo.json do repositório
-        const acaoCarregar = async () => {
-            await this.carregarArquivoJsonDoRepositorio();
-            if (this.paginas.length > 0) {
-                alert(`🎉 Sucesso! ${this.paginas.length} páginas carregadas com sucesso!`);
-            } else {
-                alert("O arquivo dados_catalogo.json não foi encontrado. Execute 'python extrair_catalogo.py' para gerá-lo!");
+        btnAtualizarFonte?.addEventListener('click', async () => {
+            const urlInformada = (inputUrlFonte?.value || '').trim();
+            if (!urlInformada) {
+                return alert("Informe o link da fonte do catálogo oficial antes de atualizar.");
             }
-            await this.atualizarTela();
-        };
 
-        btnRecarregar?.addEventListener('click', acaoCarregar);
-        btnCarregarIni?.addEventListener('click', acaoCarregar);
+            this.urlFonte = urlInformada;
+            localStorage.setItem('cacau_url_fonte_catalogo', urlInformada);
+            await this.repositorioConfiguracoes?.salvarConfiguracoes({ urlFonteCatalogo: urlInformada });
 
-        // Carregar via upload de arquivo JSON direto no navegador
-        inputArquivoJson?.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            btnAtualizarFonte.disabled = true;
+            btnAtualizarFonte.innerText = "⏳ Importando páginas da fonte...";
 
-            const reader = new FileReader();
-            reader.onload = async (evento) => {
-                try {
-                    const dados = JSON.parse(evento.target.result);
-                    this.paginas = dados.paginas || [];
-                    alert(`🎉 ${this.paginas.length} páginas carregadas do arquivo!`);
-                    await this.atualizarTela();
-                } catch (err) {
-                    alert("Arquivo JSON inválido.");
+            try {
+                const resultado = await ImportadorCatalogoOficial.importarDeUrl(urlInformada);
+                if (!resultado.paginas || resultado.paginas.length === 0) {
+                    throw new Error("Nenhuma página encontrada nesse link.");
                 }
-            };
-            reader.readAsText(file);
+
+                this.paginas = this.normalizarPaginas(resultado.paginas);
+                alert(`🎉 Sucesso! ${this.paginas.length} páginas importadas sem '+' duplicados.\nAgora revise e clique em 'Publicar Revista'.`);
+                await this.atualizarTela();
+            } catch (erro) {
+                const carregarLocal = confirm(
+                    `⚠️ Não foi possível importar direto pelo navegador (${erro.message}).\n\n` +
+                    `Se a Cacau Show bloqueou o acesso via navegador, atualize pelo botão do GitHub Actions (ou gerar_catalogo.py) colando esse mesmo link.\n\n` +
+                    `Deseja recarregar a base já salva no repositório (dados_catalogo.json)?`
+                );
+                if (carregarLocal) {
+                    await this.carregarArquivoJsonDoRepositorio();
+                    await this.atualizarTela();
+                } else {
+                    btnAtualizarFonte.disabled = false;
+                    btnAtualizarFonte.innerText = "🔄 Atualizar Catálogo da Fonte";
+                }
+            }
         });
 
-        // Marcar / Desmarcar Páginas
+        selectFiltro?.addEventListener('change', async (e) => {
+            this.filtroPaginas = e.target.value;
+            await this.atualizarTela();
+        });
+
         btnMarcarTodas?.addEventListener('click', () => {
-            document.querySelectorAll('.chk-pagina').forEach(c => c.checked = true);
+            this.paginas.forEach(p => { p.ativa = true; });
+            document.querySelectorAll('.chk-pagina').forEach(c => {
+                c.checked = true;
+                const card = c.closest('.card-pagina-montador');
+                if (card) {
+                    card.style.opacity = '1';
+                    card.style.borderColor = 'var(--cor-borda)';
+                }
+            });
+            this.atualizarContadoresVisuais();
         });
 
         btnDesmarcarTodas?.addEventListener('click', () => {
-            document.querySelectorAll('.chk-pagina').forEach(c => c.checked = false);
+            this.paginas.forEach(p => { p.ativa = false; });
+            document.querySelectorAll('.chk-pagina').forEach(c => {
+                c.checked = false;
+                const card = c.closest('.card-pagina-montador');
+                if (card) {
+                    card.style.opacity = '0.58';
+                    card.style.borderColor = '#FFCDD2';
+                }
+            });
+            this.atualizarContadoresVisuais();
         });
 
         document.querySelectorAll('.chk-pagina').forEach(chk => {
             chk.addEventListener('change', () => {
-                const pagNum = chk.getAttribute('data-pag');
-                document.querySelectorAll(`.chk-prod-p${pagNum}`).forEach(cp => {
-                    cp.checked = chk.checked;
-                });
+                const pagNum = Number(chk.getAttribute('data-pag'));
+                const pagObj = this.paginas.find(p => p.numero === pagNum);
+                if (pagObj) pagObj.ativa = chk.checked;
+
+                const card = chk.closest('.card-pagina-montador');
+                if (card) {
+                    card.style.opacity = chk.checked ? '1' : '0.58';
+                    card.style.borderColor = chk.checked ? 'var(--cor-borda)' : '#FFCDD2';
+                }
+                this.atualizarContadoresVisuais();
             });
         });
 
-        // Sincronizar com Estoque Real do Supabase
-        btnSincronizar?.addEventListener('click', async () => {
-            if (!this.repositorioProdutos) return;
-            const produtosEstoque = await this.repositorioProdutos.obterTodosComLotes();
-            const mapaEstoque = new Map();
+        document.querySelectorAll('.chk-prod').forEach(cp => {
+            cp.addEventListener('change', () => {
+                const pagNum = Number(cp.getAttribute('data-pag'));
+                const uid = cp.getAttribute('data-prod-uid');
+                const pagObj = this.paginas.find(p => p.numero === pagNum);
+                if (!pagObj) return;
 
-            produtosEstoque.forEach(p => {
-                mapaEstoque.set(p.nome.toLowerCase().trim(), p.obterEstoqueTotal());
-            });
+                const prodObj = (pagObj.produtos || []).find((pr, idx) => {
+                    const prUid = pr.uid || `p${pagNum}-${pr.id}-${idx}`;
+                    return prUid === uid;
+                });
 
-            let ajustados = 0;
-            document.querySelectorAll('.chk-prod').forEach(cp => {
-                const label = cp.closest('label')?.innerText.toLowerCase() || '';
-                for (const [nomeProd, qtdEstoque] of mapaEstoque.entries()) {
-                    if (label.includes(nomeProd)) {
-                        cp.checked = qtdEstoque > 0;
-                        ajustados++;
-                        break;
-                    }
+                if (prodObj) {
+                    prodObj.esgotado = !cp.checked;
                 }
             });
-
-            alert(`⚡ Estoque sincronizado! ${ajustados} itens ajustados conforme o estoque real.`);
         });
 
-        // PUBLICAR REVISTA PARA OS CLIENTES NO SUPABASE (BLINDADO)
+        btnTopo?.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
         btnPublicar?.addEventListener('click', async () => {
-            const inputWhats = document.getElementById('campo-whats-vendedor');
-            const whats = inputWhats.value.replace(/\D/g, '');
+            const whats = (inputWhats?.value || this.whatsapp || '').replace(/\D/g, '');
             if (whats.length < 10) return alert("Informe um WhatsApp válido!");
 
             const whatsFinal = whats.startsWith('55') ? whats : `55${whats}`;
             this.whatsapp = whatsFinal;
             localStorage.setItem('cacau_whatsapp_vendas', whatsFinal);
 
-            // Mapeia o estado diretamente das checkboxes que existem na tela
-            const checkboxesPaginas = document.querySelectorAll('.chk-pagina');
-            const mapaPaginasAtivas = new Map();
-            checkboxesPaginas.forEach(chk => {
-                mapaPaginasAtivas.set(Number(chk.getAttribute('data-pag')), chk.checked);
-            });
+            if (inputUrlFonte) {
+                this.urlFonte = inputUrlFonte.value.trim();
+                localStorage.setItem('cacau_url_fonte_catalogo', this.urlFonte);
+                await this.repositorioConfiguracoes?.salvarConfiguracoes({ urlFonteCatalogo: this.urlFonte });
+            }
 
-            const checkboxesProdutos = document.querySelectorAll('.chk-prod');
-            const mapaProdutosDisponiveis = new Map();
-            checkboxesProdutos.forEach(chk => {
-                mapaProdutosDisponiveis.set(chk.getAttribute('data-prod-id'), chk.checked);
-            });
-
-            // Aplica as escolhas: se a página foi desmarcada, ela NÃO vai para o cliente
-            const paginasFinais = [];
-
-            this.paginas.forEach(p => {
-                const estaAtiva = mapaPaginasAtivas.has(p.numero)
-                    ? mapaPaginasAtivas.get(p.numero)
-                    : (p.ativa !== false);
-
-                // Só inclui na revista se a página estiver MARCADA
-                if (estaAtiva) {
-                    const produtosAjustados = p.produtos.map(prod => {
-                        const marcado = mapaProdutosDisponiveis.has(prod.id)
-                            ? mapaProdutosDisponiveis.get(prod.id)
-                            : !prod.esgotado;
-
-                        return {
-                            ...prod,
-                            esgotado: !marcado // Se desmarcou, vira ESGOTADO
-                        };
-                    });
-
-                    paginasFinais.append ? paginasFinais.append : paginasFinais.push({
-                        ...p,
-                        ativa: true,
-                        produtos: produtosAjustados
-                    });
-                }
-            });
+            const paginasFinais = this.paginas
+                .filter(p => p.ativa !== false)
+                .map(p => ({
+                    ...p,
+                    ativa: true,
+                    produtos: ImportadorCatalogoOficial.deduplicarProdutosPagina(p.produtos || [], p.numero)
+                }));
 
             if (paginasFinais.length === 0) {
                 return alert("Atenção: Você desmarcou todas as páginas! Marque pelo menos uma página para publicar.");
@@ -214,7 +278,6 @@ export class ControladorCatalogo {
                 btnPublicar.disabled = true;
                 btnPublicar.innerText = "Publicando...";
 
-                // Grava no Supabase apenas as páginas que você escolheu
                 const { error } = await clienteSupabase.from('catalogo_publico').upsert({
                     id: 'principal',
                     whatsapp: whatsFinal,
@@ -225,12 +288,11 @@ export class ControladorCatalogo {
                 if (error) throw error;
 
                 alert(`🎉 Revista Publicada com Sucesso!\n${paginasFinais.length} páginas ativas enviadas para a nuvem.`);
-                btnPublicar.disabled = false;
-                btnPublicar.innerText = "💾 Publicar Revista para Clientes";
             } catch (e) {
                 alert(`Erro ao publicar: ${e.message}`);
+            } finally {
                 btnPublicar.disabled = false;
-                btnPublicar.innerText = "💾 Publicar Revista para Clientes";
+                btnPublicar.innerText = "💾 Publicar Revista";
             }
         });
     }
